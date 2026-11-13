@@ -57,8 +57,9 @@
         close:'<path d="m18 6-12 12M6 6l12 12"/>'
       };
       const icon=(name,cls='')=>`<span class="icon ${cls}" aria-hidden="true"><svg viewBox="0 0 24 24">${icons[name]||icons.activity}</svg></span>`;
-      const fresh=()=>({view:'login',step:1,theme:'light',customer:{name:'',contact:'',email:'',phone:'',city:''},device:{serial:'',model:'PX-500',version:'2.4.1',location:'',siteContact:''},connected:false,synced:false,update:'available',testing:false,activeTab:'all',noticeHidden:false});
+      const fresh=()=>({view:'overview',step:1,theme:'light',customer:{name:'',contact:'',email:'',phone:'',city:''},device:{serial:'',model:'PX-500',version:'2.4.1',location:'',siteContact:''},connected:false,synced:false,update:'available',testing:false,activeTab:'all',noticeHidden:false});
       let state=(()=>{try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return fresh()}})();
+      if(state.view==='login'||state.view==='onboarding')state.view='overview';
       const root=document.getElementById('app');
       const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}};
       const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -120,7 +121,7 @@
         switch(target.dataset.action){
           case 'theme':state.theme=state.theme==='dark'?'light':'dark';save();render();break;
           case 'reset':case 'restart-onboarding':if(confirm('پیش‌نمایش از ابتدا شروع شود؟ اطلاعات نمایشی این مرورگر پاک می‌شود.')){const theme=state.theme;state=fresh();state.theme=theme;save();render()}break;
-          case 'exit-onboarding':state.view='login';save();render();break;
+          case 'exit-onboarding':state.view='overview';save();render();break;
           case 'back':if(state.step>1){state.step--;save();render()}break;
           case 'next':if(state.step===1){const form=document.getElementById('customer-form');if(!form.reportValidity())return;saveForm(form,'customer');if(!state.customer.phone&&!state.customer.email){toast('شمارهٔ تماس یا ایمیل مشتری را وارد کنید.');return}state.step=2}else if(state.step===2){const form=document.getElementById('device-form');if(!form.reportValidity())return;saveForm(form,'device');if(state.device.serial.length<5){document.getElementById('serial-error').textContent='شمارهٔ سریال را بررسی کنید؛ باید دست‌کم ۵ نویسه داشته باشد.';return}state.step=3}else if(state.step===3){state.step=4}save();render();break;
           case 'connect-demo':state.connected=true;state.synced=true;save();render();toast('اتصال برقرار شد؛ ۳ گزارش نمونه همگام شد.');break;
