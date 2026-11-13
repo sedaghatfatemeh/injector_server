@@ -1,0 +1,6 @@
+Django>=5.2,<6.1
+djangorestframework>=3.16,<4
+django-filter>=25.1,<26
+packaging>=25,<27
+psycopg[binary]>=3.2,<4
+django-cors-headers>=4.7,<5

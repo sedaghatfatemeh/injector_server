@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+backend/.env
+backend/.venv/
+backend/**/__pycache__/
+backend/*.sqlite3
+backend/media/
+backend/staticfiles/
+*.py[cod]
+
+# Local prototype work and generated hosting metadata
+.injector-onboarding-clean/
+site-archives/
+sites/injector-onboarding/.openai/
