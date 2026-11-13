@@ -39,3 +39,5 @@ The standalone, backend-free walkthrough is in [`sites/injector-onboarding/index
 ## Current boundary
 
 The server does not control a test. Each device must durably queue its own events and decide when installation is safe. Software packages are hosted externally; the API stores the version, HTTPS URL, compatibility, and expected SHA-256 digest, then publishes a release automatically when an authorized super administrator creates it. Release-signature verification, device client integration, production hosting, backups/retention, and API validation remain before production use.
+
+The standalone onboarding walkthrough is included in [prototype/onboarding](./prototype/onboarding/).

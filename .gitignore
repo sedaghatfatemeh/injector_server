@@ -13,3 +13,5 @@ backend/staticfiles/
 .injector-onboarding-clean/
 site-archives/
 sites/injector-onboarding/.openai/
+sites/
+
