@@ -1,0 +1,15 @@
+# The API image uses the repository root as its build context.
+# Send only backend sources, excluding local credentials and generated files.
+**
+!backend/
+!backend/**
+backend/**/.env
+backend/**/.env.*
+backend/**/.venv
+backend/**/__pycache__
+backend/**/*.py[cod]
+backend/**/.pytest_cache
+backend/**/.ruff_cache
+backend/**/*.sqlite3
+backend/media
+backend/staticfiles

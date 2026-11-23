@@ -4,6 +4,31 @@ The backend is a Django REST Framework service backed by PostgreSQL. Staff and c
 
 ## Local setup
 
+### Container build context and Darkoob
+
+Build the API from the **repository root**, using `backend/Dockerfile`:
+
+```sh
+docker build --target production -f backend/Dockerfile -t injector-api .
+```
+
+For the deployment build, select the repository root (`.`) as the build context,
+`backend/Dockerfile` as the Dockerfile, and port `8000` for the API service.
+The Dockerfile copies dependency files and application sources from `backend/`;
+using `backend/` as the context with this Dockerfile is unsupported. Compose
+uses the same root context. The root `.dockerignore` excludes local environments,
+credentials, and unrelated frontend/prototype files from that context.
+
+A missing registry cache manifest can occur before the first successful build.
+In the reported failure, the build continued past that message and stopped at
+`COPY`: a missing `.python-version` there indicates the wrong source path/context,
+even though `backend/.python-version` is committed.
+
+This image serves the Django API, not the React dashboard. Configure runtime
+database and Django variables separately (see `.env.example`); do not pass secrets
+as build arguments. Run `python manage.py migrate` as a one-off release command
+before serving traffic. The image does not run migrations automatically.
+
 Use Python 3.12 and PostgreSQL 17. Copy `.env.example` to `.env`, set the database credentials, and export those variables in the shell (Django does not load `.env` automatically). The Compose setup at the repository root provides PostgreSQL and the API container.
 
 ```powershell

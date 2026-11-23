@@ -4,21 +4,21 @@ WORKDIR /app
 
 FROM base AS dependencies
 RUN pip install --no-cache-dir uv==0.13.6
-COPY pyproject.toml uv.lock .python-version ./
+COPY backend/pyproject.toml backend/uv.lock backend/.python-version ./
 ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
 RUN uv sync --locked --no-dev
 
 FROM dependencies AS development
 RUN uv sync --locked
 ENV PATH="/app/.venv/bin:$PATH"
-COPY . .
+COPY backend/ .
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 FROM base AS production
 ENV PATH="/app/.venv/bin:$PATH"
 COPY --from=dependencies /app/.venv /app/.venv
 RUN useradd --system --uid 10001 --create-home appuser
-COPY . .
+COPY backend/ .
 RUN DJANGO_DEBUG=true DJANGO_SECRET_KEY=build-only-static-assets python manage.py collectstatic --noinput
 USER 10001:10001
 EXPOSE 8000
