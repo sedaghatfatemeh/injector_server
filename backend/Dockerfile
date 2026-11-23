@@ -1,3 +1,12 @@
+FROM node:22-bookworm-slim AS frontend
+WORKDIR /frontend
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY index.html vite.config.js ./
+COPY src/ ./src/
+ENV VITE_DEMO_MODE=false VITE_API_BASE_URL=""
+RUN npm run build -- --base=/static/console/
+
 FROM python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b AS base
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 DJANGO_DEBUG=false
 WORKDIR /app
@@ -19,6 +28,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --from=dependencies /app/.venv /app/.venv
 RUN useradd --system --uid 10001 --create-home appuser
 COPY backend/ .
+COPY --from=frontend /frontend/dist /app/console_dist
 RUN DJANGO_DEBUG=true DJANGO_SECRET_KEY=build-only-static-assets python manage.py collectstatic --noinput
 USER 10001:10001
 EXPOSE 8000

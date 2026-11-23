@@ -17,14 +17,19 @@ For the deployment build, select the repository root (`.`) as the build context,
 The Dockerfile copies dependency files and application sources from `backend/`;
 using `backend/` as the context with this Dockerfile is unsupported. Compose
 uses the same root context. The root `.dockerignore` excludes local environments,
-credentials, and unrelated frontend/prototype files from that context.
+credentials, and prototype files from that context.
 
 A missing registry cache manifest can occur before the first successful build.
 In the reported failure, the build continued past that message and stopped at
 `COPY`: a missing `.python-version` there indicates the wrong source path/context,
 even though `backend/.python-version` is committed.
 
-This image serves the Django API, not the React dashboard. Configure runtime
+The production image builds the React dashboard with Node 22 and the committed
+npm lockfile, explicitly disabling demo mode and using same-origin API requests.
+It serves the login shell at `/`, customer deep links at `/customer/devices`,
+and bundled assets under `/static/console/` through WhiteNoise. Django API and
+admin routes remain on the same port, `8000`. The development target still uses
+the separate Vite development server. Configure runtime
 database and Django variables separately (see `.env.example`); do not pass secrets
 as build arguments. Run `python manage.py migrate` as a one-off release command
 before serving traffic. The image does not run migrations automatically.

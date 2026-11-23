@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.db import connection
 from devices.views import StaffUserViewSet
 from devices.portal import CustomerDeviceViewSet, CustomerSummary, CustomerUserViewSet
+from .frontend import console
 
 router = DefaultRouter()
 router.register("customers", CustomerViewSet, basename="customer")
@@ -27,6 +28,11 @@ def ready(request):
     return JsonResponse({"status": "ok"})
 
 urlpatterns = [
+    path("", console, name="console"),
+    path("customer/devices", console, name="customer-console"),
+    path("customer/devices/", console),
+    path("customer/devices/<int:device_id>", console, name="customer-console-detail"),
+    path("customer/devices/<int:device_id>/", console),
     path("health/live/", lambda request: JsonResponse({"status": "ok"}), name="health-live"),
     path("health/ready/", ready, name="health-ready"),
     path("admin/", admin.site.urls),

@@ -1,6 +1,12 @@
 # The API image uses the repository root as its build context.
-# Send only backend sources, excluding local credentials and generated files.
+# Send application sources, excluding local credentials and generated files.
 **
+!package.json
+!package-lock.json
+!index.html
+!vite.config.js
+!src/
+!src/**
 !backend/
 !backend/**
 backend/**/.env
@@ -13,3 +19,4 @@ backend/**/.ruff_cache
 backend/**/*.sqlite3
 backend/media
 backend/staticfiles
+backend/console_dist
