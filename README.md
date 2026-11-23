@@ -1,43 +1,64 @@
 # Pishgaman Shargh Injector Management MVP
 
-This repository contains the Persian RTL dashboard prototype and a Django/PostgreSQL API scaffold for the MVP. The dashboard still uses sample data. The backend implements authenticated staff APIs, customer/device records, device check-in, idempotent event ingestion, update metadata, and rollout status.
+This repository contains Persian RTL staff and customer panels, a Django REST API, and a separate onboarding walkthrough. The console uses live API data by default; set `VITE_DEMO_MODE=true` to explicitly view the sample-data prototype.
 
-## Run the backend locally with Docker
+## Start the backend locally
 
-1. Copy `.env.example` to `.env` and replace the development secret and database password.
-2. Start PostgreSQL and Django:
+For a step-by-step Windows walkthrough in Persian, see [راهنمای اجرای محلی پروژه](docs/local-setup.fa.md).
+
+For the complete setup, staff/customer journeys, device and update contracts, acceptance checks, and verification limits, see [راهنمای جامع گام‌به‌گام](docs/walkthrough.fa.md).
+
+For the separate second edition with real panel screenshots, see [نسخه ۲ راهنمای تصویری](docs/walkthrough.v2.fa.md). The original guide remains unchanged.
+
+1. Copy `.env.example` to `.env` and set a private development secret and database password.
+2. Build the API and start PostgreSQL:
 
    ```powershell
-   docker compose up --build
+   docker compose build api
+   docker compose up -d db
    ```
 
-3. In another terminal, create the initial superuser:
+3. Apply migrations once, then start the API:
+
+   ```powershell
+   docker compose run --rm api python manage.py migrate
+   docker compose up -d api
+   ```
+
+4. Create the first super administrator and open Django admin at `http://localhost:8000/admin/`:
 
    ```powershell
    docker compose exec api python manage.py createsuperuser
    ```
 
-4. Open Django admin at `http://localhost:8000/admin/`. The superuser email is used to sign in to the API. Create support users there with `is_staff` enabled and `is_superuser` disabled.
+After creating the first super administrator, sign into the console and open **کاربران** to add support or super-administrator staff accounts. Support accounts are placed in the `support` group automatically and cannot access user management. The console signs staff in with expiring, CSRF-protected session cookies. API and device setup details are in [`backend/README.md`](backend/README.md).
 
-The API is available at `http://localhost:8000/api/v1/`. See [`backend/README.md`](backend/README.md) for endpoint details and device payload examples.
+To provision a customer, register the customer organization and its devices, then open **حساب‌های مشتریان** as a super administrator. Create an account and select its active organization. Deliver its initial password through a secure channel. The shared login sends customers to `/customer/devices`, where they can view only their organization's assigned device details and estimated connectivity. Multiple accounts can share one organization; each account belongs to one organization. Customers cannot register themselves, manage devices or staff, read operational event/release/audit records, or control tests. Deactivating the account blocks existing sessions on their next request. See the [Persian customer setup instructions](docs/local-setup.fa.md#ورود-مشتری-و-پنل-اختصاصی).
 
-## Run the dashboard prototype
+Existing checkouts must rebuild the API and apply additive migration `0006_customer_membership` before using the updated backend. It does not convert existing staff or infer customer membership from contact emails. Preserve and back up existing databases; do not remove volumes or rewrite applied migrations.
 
-The front end is separate and still uses local sample data:
+Backend dependencies are declared in `backend/pyproject.toml` and locked in `backend/uv.lock`, targeting Python 3.12 and Django 5.2 LTS. For native development, run `uv sync --locked` from `backend/`. The Docker production target installs runtime dependencies only; the development target includes Pytest and Ruff. See the [backend development and PostgreSQL test commands](backend/README.md#locked-python-development-environment).
+
+## Start the dashboard
 
 ```powershell
 npm.cmd install
 npm.cmd run dev
 ```
 
-The frontend has not yet been wired to the API, by decision. Follow [`product_spec.md`](product_spec.md) for the product scope and [`design-spec.md`](design-spec.md) for the visual system.
+The API client uses same-origin `/api/v1/` by default. For local Vite development, configure an API base URL or the allowed CORS/CSRF origins. Sample records appear only when the explicit `VITE_DEMO_MODE=true` flag is set.
+
+## Task tracking
+
+This project uses Beads for implementation tasks and dependencies. Run
+`./scripts/bd.cmd ready` to see available work. See
+[`docs/development-workflow.md`](docs/development-workflow.md) for installation,
+daily commands, and the policy for issue snapshots and database backups.
 
 ## Interactive onboarding prototype
 
-The standalone, backend-free walkthrough is in [`sites/injector-onboarding/index.html`](sites/injector-onboarding/index.html). It simulates staff sign-in, customer and device registration, a device connection/offline sync flow, event review, and a safe software update. Demo state is kept only in browser `localStorage`. The generated static package is in `sites/injector-onboarding/dist/`.
+The approved interface reference in [`prototype/onboarding/index.html`](prototype/onboarding/index.html) keeps demo state in browser `localStorage` and does not connect to the live API.
 
-## Current boundary
+## Production prerequisites
 
-The server does not control a test. Each device must durably queue its own events and decide when installation is safe. Software packages are hosted externally; the API stores the version, HTTPS URL, compatibility, and expected SHA-256 digest, then publishes a release automatically when an authorized super administrator creates it. Release-signature verification, device client integration, production hosting, backups/retention, and API validation remain before production use.
-
-The standalone onboarding walkthrough is included in [prototype/onboarding](./prototype/onboarding/).
+The server never controls a test. Device software owns durable event queueing and decides when installation is safe. Packages remain on an external HTTPS host. SHA-256 verifies package integrity but does not authenticate the publisher: production device rollout requires signed release metadata verified against the actual updater. Hosting provider, backup/retention policy, and operational targets also remain to be selected.

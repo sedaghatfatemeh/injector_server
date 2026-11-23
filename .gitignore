@@ -1,5 +1,7 @@
 node_modules/
 dist/
+test-results/
+playwright-report/
 .env
 backend/.env
 backend/.venv/
@@ -15,3 +17,17 @@ site-archives/
 sites/injector-onboarding/.openai/
 sites/
 
+
+# Python tooling and local environments
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.local/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+*.gate.lock*

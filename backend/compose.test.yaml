@@ -1,0 +1,8 @@
+services:
+  api:
+    image: injector-api-dev
+    build:
+      target: development
+    environment:
+      DJANGO_DEBUG: "true"
+    command: ["pytest"]

@@ -1,0 +1,38 @@
+[project]
+name = "injector-server"
+version = "0.1.0"
+description = "Internal staff and device API for Pishgaman Shargh injector equipment"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "Django>=5.2,<5.3",
+    "djangorestframework>=3.16,<4",
+    "django-filter>=25.1,<26",
+    "packaging>=25,<27",
+    "psycopg[binary]>=3.2,<4",
+    "django-cors-headers>=4.7,<5",
+    "gunicorn>=23,<24; sys_platform != 'win32'",
+    "whitenoise>=6.12,<7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-django>=4.9,<5",
+    "ruff>=0.11,<1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+# Start with correctness checks; expand style enforcement in focused changes.
+select = ["E4", "E7", "E9", "F"]

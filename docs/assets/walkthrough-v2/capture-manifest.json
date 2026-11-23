@@ -1,0 +1,278 @@
+{
+  "capturedAt": "2026-11-20T08:23:31.682Z",
+  "realBackend": true,
+  "browser": "Playwright Edge/Chromium",
+  "ordinaryDatabaseModified": false,
+  "originalGuideSha256": "39c73ad82a3531c7376e1d32f86f49e7b2a72dbb082916b30159fe8f5f570930",
+  "captureUsesPrototypeEmbeddedFont": true,
+  "secretsMasked": true,
+  "steps": [
+    "Administrator browser login through real API",
+    "Real credential/check-in/events accepted, duplicate and conflict verified",
+    "Staff, organization, device, release and customer account created through real UI",
+    "Real customer scoped list, safe fields, staff denial and detail reload verified",
+    "Real reassignment and deactivation clear customer access on next request",
+    "Support read-only boundaries and server logout verified",
+    "Captured 32 real panel screenshots; original guide unchanged"
+  ],
+  "screenshots": [
+    {
+      "filename": "01-login.png",
+      "caption": "صفحه ورود مشترک کارکنان و مشتری؛ ثبت‌نام عمومی وجود ندارد.",
+      "role": "anonymous",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "98a7553db34772531fbf1170725e906aed11db716ff4fb392c64aaa7f7c2042e"
+    },
+    {
+      "filename": "02-overview.png",
+      "caption": "نمای کلی مدیر کل در محیط آزمایشی متصل به PostgreSQL.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "9a0dbf553beab30125793ac485713a175c6841e87dd94ed942eed643d5117029"
+    },
+    {
+      "filename": "03-staff-form.png",
+      "caption": "افزودن کارمند با نقش پشتیبان؛ ناحیه گذرواژه در تصویر پوشانده شده است.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "208c9b030fd9ab00e30b65b3a9f48c5d2ce5e956950cd21216437bc6a3afc7e9"
+    },
+    {
+      "filename": "04-staff-created.png",
+      "caption": "حساب پشتیبان پس از ایجاد موفق در فهرست کارکنان.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "1e5a9f6108951f875cea8a6aed5ce2d7c6ba534925b0792a9259dc41234b5a7c"
+    },
+    {
+      "filename": "05-organization-form.png",
+      "caption": "ثبت سازمان و حداقل اطلاعات تماس؛ این فرم حساب ورود مشتری نمی‌سازد.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "9f829f38c93ffab0f9b2e1164d3936fa879f11c182533959723a6169f89ad512"
+    },
+    {
+      "filename": "06-organizations.png",
+      "caption": "دو سازمان آزمایشی برای نمایش مالکیت مجزا.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "4c3c6013d44ab39e502c842200d26affc71161d02241e07228612b3022386c7d"
+    },
+    {
+      "filename": "07-device-form.png",
+      "caption": "ثبت دستگاه با سریال یکتا و تخصیص به سازمان الف.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "d48616fcc0733cfc46b8d0d28aec98ccad165e24f832c820a3c6472ed1851c67"
+    },
+    {
+      "filename": "08-devices.png",
+      "caption": "موجودی دستگاه‌های دو سازمان؛ دستگاه تازه هنوز ارتباط ندارد.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "1150acdb3ecf618ea9e4669785b4d8cbb99203f5ed98658f01c2e6a60b76d533"
+    },
+    {
+      "filename": "09-device-search.png",
+      "caption": "جست‌وجوی سریال و نمایش ارتباط اخیر و یک خطای فعال گزارش‌شده.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "589b55d3129ec0021fe8265d4abd1d0d41415bf734ddb2c600cb870b9d8bc41d"
+    },
+    {
+      "filename": "10-device-detail.png",
+      "caption": "جزئیات دستگاه و زمان وقوع/دریافت رویدادهای واقعیِ آزمایشی.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "942dcabb4d94b2ae49093375b82b2d05a7ec5f0f57df3abf0e873992a7048b24"
+    },
+    {
+      "filename": "11-credential-masked.png",
+      "caption": "نمایش یک‌باره شناسه دستگاه؛ خود secret عمداً با پوشش تصویری حذف شده است.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "351b53ec6f656e52d49a6033d59169d8b479b950ee20a7de5afc5219fe85a138"
+    },
+    {
+      "filename": "12-events.png",
+      "caption": "تاریخچه رویدادها با زمان وقوع، زمان دریافت و برچسب تأخیر.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "729c9ab4b1b89fee66a93329659e40de7f9d5b7cafdbbdad3fba7a26b6d8ab3d"
+    },
+    {
+      "filename": "13-event-filter.png",
+      "caption": "فیلتر تاریخچه بر اساس سریال و state گزارش‌شده؛ این فیلتر تشخیص سرور نیست.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "ad6046746b13ffc951c8d6e447e839ff116c451c4a5c81555be9cb9c501264b9"
+    },
+    {
+      "filename": "14-release-form.png",
+      "caption": "بخش مشخصات metadata نمونه؛ URL و digest آموزشی‌اند و بسته واقعی ندارند.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "7c4b72790fa99139bcb96079f6c25f84c925116bf3ec3affd833c961b1da4b2e"
+    },
+    {
+      "filename": "32-release-targets.png",
+      "caption": "ادامه فرم انتشار: انتخاب مدل و حداقل نسخه و مقصد منتخب پیش از ذخیره.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "634ec0ad6cf6a1df75637c65612b5b0df910259005c9b9d31339ec3fae195ae9"
+    },
+    {
+      "filename": "15-releases.png",
+      "caption": "انتشار خودکار metadata و assignment دستگاه منتخب؛ بدون دانلود یا نصب.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "41b52f1ef841db7a6ad5e1419094c6e934597f5aeb377c18a25f5cd42ff06993"
+    },
+    {
+      "filename": "16-customer-account-form.png",
+      "caption": "ساخت حساب ورود مشتری و اتصال صریح آن به سازمان الف؛ رمز پوشانده شده است.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "f63eece205aeb5e4d4fe3a5be39fec63910047df2e9d83dd29fb4f4119d48008"
+    },
+    {
+      "filename": "17-customer-accounts.png",
+      "caption": "حساب مشتری فعال در فهرست مجزای مدیریت حساب‌های مشتریان.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "3f7c69244332281654afa627d44aacc8132b43d57a89d60896f92d4f34834d86"
+    },
+    {
+      "filename": "18-invalid-login.png",
+      "caption": "رد ورود با رمز اشتباه و پیام عمومی؛ هویت نامعتبر تفکیک نمی‌شود.",
+      "role": "anonymous",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "6ac00cfc826c7864e1df9bae24437dac92ef7bd84ace71d8ef68eb0848ad522a"
+    },
+    {
+      "filename": "19-customer-devices.png",
+      "caption": "پنل مشتری فقط دو دستگاه سازمان الف را نشان می‌دهد؛ دستگاه ب دیده نمی‌شود.",
+      "role": "customer",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "950470c073c61e435a57c099a4fff5f4de157d36f0ae26ea4a6b9ba025c1e134"
+    },
+    {
+      "filename": "20-customer-detail.png",
+      "caption": "جزئیات فقط‌خواندنی مشتری؛ تماس داخلی، رویداد و انتشار در پاسخ وجود ندارند.",
+      "role": "customer",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "1ba68525f362a2d76648e2a08665efca5c2d8701a1136e75850945754445d74b"
+    },
+    {
+      "filename": "21-never-connected.png",
+      "caption": "دستگاه دوم هنوز ارتباطی ندارد؛ آخرین ارتباط یا آنلاین بودن ساختگی نیست.",
+      "role": "customer",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "197131efc41105a5be0bb8957da31dd1016d2f9c1fb45f67103e597b9996b4e3"
+    },
+    {
+      "filename": "22-customer-no-match.png",
+      "caption": "جست‌وجوی بدون نتیجه و امکان پاک‌کردن فیلتر؛ با خطای API فرق دارد.",
+      "role": "customer",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "4dea43c11ad1b31d4b0d164f56ad28f740babc8c335d4aafe4662fd409b06785"
+    },
+    {
+      "filename": "23-mobile-customer.png",
+      "caption": "پنل مشتری در عرض ۳۹۰ پیکسل با ساختار RTL و جدول قابل پیمایش.",
+      "role": "customer",
+      "width": 390,
+      "height": 844,
+      "sha256": "9a4cb43b566fc07093605e7a3e9a43ffc56310f7f70eb92c6be0071040f0c752"
+    },
+    {
+      "filename": "24-mobile-drawer.png",
+      "caption": "منوی کشویی موبایل مشتری؛ مسیرهای کارکنان وجود ندارند.",
+      "role": "customer",
+      "width": 390,
+      "height": 844,
+      "sha256": "438f6423323377d9d29a9f8c7b2b29f69e8a4f6400dbaab65146fe961714103c"
+    },
+    {
+      "filename": "25-mobile-dark.png",
+      "caption": "پوسته تیره همان پنل مشتری؛ داده‌ها از API واقعی آزمایشی هستند.",
+      "role": "customer",
+      "width": 390,
+      "height": 844,
+      "sha256": "6cdedde57f79a479c592b0522491e2521b00e008d02be1a2dea474e359953b0a"
+    },
+    {
+      "filename": "26-device-reassignment.png",
+      "caption": "مدیر در حال انتقال دستگاه از سازمان الف به ب؛ نسخه گزارش‌شده read-only است.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "6b6c42d758d267412c96477d15d976f789c40dec98fa7e4319b9741a24d2f712"
+    },
+    {
+      "filename": "27-reassigned-unavailable.png",
+      "caption": "پس از انتقال، جزئیات قبلی مشتری پاک و دسترسی از درخواست بعدی رد می‌شود.",
+      "role": "customer",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "a931ccc69a10295311138cf7f209a397600e8d93324c08d51ecb3948b36ed917"
+    },
+    {
+      "filename": "28-customer-deactivated.png",
+      "caption": "غیرفعال‌سازی حساب مشتری توسط مدیر؛ حذف فیزیکی یا تغییر نقش انجام نمی‌شود.",
+      "role": "super_admin",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "387e80c842f3b0119b89532346ca8377bb5eedf148150219ad7f0975d11b1b0f"
+    },
+    {
+      "filename": "29-revoked-session.png",
+      "caption": "بازگشت به ورود پس از لغو دسترسی؛ هیچ جزئیات دستگاه قبلی باقی نیست.",
+      "role": "anonymous",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "bfb641c7342baef9ed05bdf5aa2633e432ee3a4769cbb11437a40406f98aa2e9"
+    },
+    {
+      "filename": "30-support-read-only.png",
+      "caption": "نمای پشتیبان بدون دکمه ثبت/ویرایش/شناسه و بدون مدیریت کاربران.",
+      "role": "support",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "fabbfde881647ce81c7ac339f368dc96bb12f982bca3fab8e400efaaea63068a"
+    },
+    {
+      "filename": "31-logout.png",
+      "caption": "خروج موفق و بازگشت به صفحه ورود؛ نشست قبلی داده محافظت‌شده نشان نمی‌دهد.",
+      "role": "anonymous",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "d81985378b8d231182773e82214c60508d385062b95e67dcbd2c3616e4a58812"
+    }
+  ],
+  "cleanupOk": true,
+  "completed": true
+}

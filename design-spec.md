@@ -2,7 +2,7 @@
 
 ## Experience Goal
 
-The dashboard should help administrators and support staff understand fleet health and recent reports at a glance. The interface is Persian and right-to-left, following a “summary first, details when needed” pattern: essential data remains visible in cards and tables, while history, supporting information, and actions are available in expandable rows, accordions, detail panels, or dedicated pages. Frequent tasks such as searching by serial number and reviewing faults should be one action away.
+The staff dashboard should help administrators and support staff understand fleet health and recent reports at a glance. The dedicated customer panel helps a customer inspect only their own organization’s assigned devices and estimated connectivity. The interface is Persian and right-to-left, following a “summary first, details when needed” pattern: essential data remains visible in cards and tables, while history, supporting information, and actions are available in expandable rows, accordions, detail panels, or dedicated pages. Frequent tasks such as searching by serial number and reviewing faults should be one action away.
 
 ## Visual Principles
 
@@ -50,4 +50,38 @@ Keep copy concise, respectful, calm, and professional. Replace vague technical m
 
 ## Phase One Boundaries
 
-The current dashboard uses sample data to establish the experience. A connected service still needs authenticated API access and roles, customer and unique-serial registration, batch event ingestion with unique IDs to prevent duplicates, event and receipt timestamps, offline queue/sync support, customer management, software release and rollback workflows, and audit logging. The server must not participate in real-time test control. Device and event models should allow approved test sheets and an AI assistant in a later phase; generating test values without a reliable source is not allowed.
+The visual prototype uses sample data to establish the experience. The connected staff console is implemented separately; remaining delivery is tracked in Beads. Product requirements include authenticated API access and roles, customer and unique-serial registration, batch event ingestion with unique IDs to prevent duplicates, event and receipt timestamps, offline queue/sync support, customer management, software release and rollback workflows, and audit logging. The server must not participate in real-time test control. Device and event models should allow approved test sheets and an AI assistant in a later phase; generating test values without a reliable source is not allowed.
+
+## Approved Customer Panel (2026-11-18)
+
+This MVP extension is implemented in src/CustomerPanel.jsx and src/CustomerUsers.jsx and tracked by CUST-001 through CUST-007. prototype/onboarding/index.html remains the visual reference for layout, colors, typography, RTL navigation/drawer, device cards/table and read-only details. That historical prototype is a staff onboarding simulation, explicitly says customers cannot log in, and stores demo state locally. Its old scope copy does not override this approval. The live customer panel extends its visual language with real customer authorization and data; the prototype's connect/update simulation stays separate.
+
+### Entry, navigation and routes
+
+- Keep the shared email/password sign-in, generic credential error, password visibility control, pending state and accessible labels. There is no customer registration link or role selector that grants permissions.
+- A successful customer session opens /customer/devices. A device opens /customer/devices/:id; back navigation returns to the list. Refresh and direct links restore and check the server session before rendering protected content. The client uses the existing application structure and browser history; static hosting must provide SPA fallback for these routes.
+- Display safe organization identity, My devices, theme preference and logout in the familiar RTL shell. Support mobile drawer dismissal, keyboard focus and LTR identifiers. Do not show staff customers/users/events/releases/audit navigation, admin controls, connect actions or update actions to customers. Staff routes remain role-protected even when entered directly.
+- Super administrators get a clearly labeled customer-account area in user management, distinct from staff accounts: select an active organization, enter identity/initial password, create account, and activate/deactivate an existing account. Show server field errors and creation status; never display stored passwords/hashes. Support/customers do not receive these controls.
+
+### Customer device experience
+
+- List only assigned non-archived devices, with serial, model, software version, estimated connection status and last communication. Details may also show installation location. Keep contacts, internal notes, events/faults, rollout information and credentials outside this scope.
+- Search serial/model and filter connection state using scoped server queries and pagination. Optional summary cards contain only this organization's total/online/offline counts, never staff fleet metrics.
+- Label connectivity as an estimate based on the last successful communication and configurable threshold (15 minutes by default). Show refresh/freshness time and a never-connected message when no communication exists. Do not imply a currently open channel, real-time certainty or permission to control tests.
+- Preserve themes, responsive cards/table, Persian dates/numbers, LTR serial/version values, semantic status labels, visible focus, keyboard navigation, touch targets and reduced motion.
+
+### State and data boundaries
+
+| State | Required behavior |
+|---|---|
+| Session restoration/loading | Announce pending state; do not flash staff content or cached customer data |
+| Empty organization fleet | Explain no assigned devices; no add-device action or invented sample records |
+| Search has no matches | Offer clearing the search/filter; distinguish from zero assigned devices |
+| Never connected | Explicit text and no invented last-seen time |
+| Refresh/stale data | Show timestamp/basis and pending/error status; do not present stale values as current |
+| API outage | Visible retry/error state, distinct from empty results; no demo fallback |
+| Foreign/missing/reassigned device | Generic unavailable/not-found view; clear protected details after denial |
+| Expired/deactivated/revoked session | Clear organization/device data and pending requests, return to sign-in with a calm explanation |
+| Logout | End server session and clear protected data; browser back must not restore an authenticated view |
+
+The backend permission matrix is authoritative. Hidden controls are presentation only. Keep prototype/localStorage demo data separate from the live customer panel; additional prototype features and customer self-service remain deferred.

@@ -2,7 +2,7 @@
 
 **Document status:** MVP product definition — decisions confirmed  
 **Product owner:** Pishgaman Shargh  
-**Primary users:** Internal administrators, support staff, and (in a later customer-access phase) customers  
+**Primary users:** Internal administrators, support staff, and organization-scoped customer users  
 **Related design document:** [`design-spec.md`](./design-spec.md)
 
 ## 1. Product Summary
@@ -11,7 +11,7 @@ Pishgaman Shargh manufactures injector testing equipment for heavy vehicles. Eac
 
 The platform is a monitoring and management system. It does not control, modify, or interrupt a test in progress. Device-side software remains responsible for test execution, fault diagnosis, offline buffering, and safe update installation. When a device reconnects, its locally queued events are delivered to the server and become visible in the dashboard.
 
-The first release is an internal MVP focused on authenticated staff access, customer and device records, event ingestion and review, connectivity visibility, and controlled Python software updates. Customers do not sign in during the MVP. Payment/license enforcement, STM32 firmware updates, and AI assistance are later-phase capabilities.
+The first release includes authenticated staff access, customer and device records, event ingestion and review, connectivity visibility, controlled Python software updates, and a limited read-only customer panel. Customers sign in with administrator-provisioned accounts and view only their organization’s assigned devices and estimated connection status. Payment/license enforcement, STM32 firmware updates, and AI assistance are later-phase capabilities.
 
 ## 2. Problem and Opportunity
 
@@ -28,7 +28,7 @@ The platform creates a shared operational record while keeping device testing au
 5. Provide a clear event and fault history, including active and resolved status as reported by the device.
 6. Provide a foundation for distributing compatible Python software updates and tracking installation results.
 7. Deliver a fast, polished, mobile-first Persian experience with light and dark themes.
-8. Keep the data model and service boundaries ready for future customer access, licensing, test sheets, and AI assistance.
+8. Provide secure organization-scoped customer access while keeping licensing, test sheets, and AI assistance separate future capabilities.
 
 ## 4. Non-Goals and Safety Boundaries
 
@@ -43,21 +43,39 @@ The platform creates a shared operational record while keeping device testing au
 
 ### 5.1 Super Administrator
 
-An internal, fully trusted operator who can manage staff access, customers, devices, software releases, rollout targets, and audit history. Customer creation and staff account provisioning are restricted to this role in the MVP.
+An internal, fully trusted operator who can manage staff access, customers, devices, software releases, rollout targets, and audit history. Customer creation and staff/customer account provisioning, organization assignment, and account deactivation are restricted to this role in the MVP.
 
 ### 5.2 Support Staff
 
 An internal user who can search and view customers/devices, review faults and event history, and inspect update status. By default, support staff cannot create administrator accounts, publish a software release, change security settings, or perform destructive actions. Update permissions can be granted explicitly if the operating policy requires them.
 
-### 5.3 Customer User (Later Phase)
+### 5.3 Customer User (MVP: Limited Read-Only Panel)
 
-A customer may eventually sign in and view only their own organization’s devices, logs, and update notices. Customer self-service is not part of the initial MVP. The data model and authorization model must be tenant-aware from the beginning so adding customer accounts does not require redesigning ownership boundaries.
+A customer signs in with an account provisioned by a super administrator. Each account belongs to exactly one customer organization; multiple customer accounts may belong to the same organization. Customers are not staff. They can view only devices currently assigned to their organization, read-only device details, estimated connection status, and last successful communication. Public registration and customer self-registration are excluded. Customer event/fault history, update notices/actions, profile editing and other self-service remain deferred.
+
+### 5.4 MVP Permission Matrix
+
+| Operation | Super administrator | Support staff | Customer |
+|---|---|---|---|
+| Sign in/out and inspect own session | Yes | Yes | Yes, with valid organization membership |
+| View device list/details and connectivity | Staff fleet | Staff fleet | Own organization's active devices only |
+| Read summary totals | Staff fleet | Staff fleet | Own organization's device/online/offline counts only |
+| Read customers, contact information, events, faults, releases and update outcomes | Yes | Yes | No |
+| Create/manage customer organizations and devices; assign devices | Yes | No | No |
+| Provision/deactivate staff or customer accounts; assign roles/membership | Yes | No | No |
+| Manage device credentials, releases and rollout/rollback | Yes | No by default | No |
+| Enter Django admin and inspect audit history | Yes | No | No |
+| Submit device check-ins/events/update outcomes using browser credentials | No | No | No |
+| Control or interrupt device tests | No | No | No |
+
+Server-side permissions and tenant-scoped queries enforce this matrix. Anonymous visitors see only sign-in and explicitly public health/bootstrap endpoints; devices use their own credentials, never browser roles.
 
 ## 6. Product Scope by Phase
 
 ### Phase 1: MVP (Confirmed)
 
-- Secure email/password sign-in and sign-out for internal administrators and support staff. Staff accounts are provisioned by an administrator; there is no public registration.
+- Secure email/password sign-in and sign-out for internal administrators, support staff, and customers. A super administrator provisions accounts; there is no public registration.
+- Dedicated customer panel for organization-scoped device list/details, estimated connectivity, and last successful communication; no customer device control or management.
 - Role-based authorization and audit records for sensitive actions.
 - Customer registration and management by the super administrator.
 - Device registration with a globally unique serial number and customer assignment.
@@ -71,9 +89,9 @@ A customer may eventually sign in and view only their own organization’s devic
 - A device is online if its last successful authenticated check-in was within the previous 15 minutes; this threshold is configurable.
 - Light and dark themes, responsive layouts, accessible controls, and clear loading/empty/error states.
 
-### Phase 2: Customer Access and License Operations
+### Phase 2: Expanded Customer Self-Service and License Operations
 
-- Customer accounts restricted to their own organization and devices.
+- Customer event/fault history, update notices, profile editing and other expanded self-service require a separate scope decision. Basic organization-scoped device access is already in Phase 1.
 - License state, payment due dates, reminders, suspension, and reactivation workflow where contractually applicable.
 - Suspension requires an authorized, authenticated action, records a reason and audit event, and must never abruptly stop a running test or pressure process. The device applies any restriction only at a safe point under an explicitly defined offline and grace-period policy.
 
@@ -125,17 +143,28 @@ A customer may eventually sign in and view only their own organization’s devic
 5. The device reports downloaded, installed, failed, or rolled-back status and diagnostic details that do not expose secrets.
 6. Staff can inspect rollout progress and retain access to prior known-good releases. Rollback is initiated through a deliberate, audited release action and applied by the device at a safe point.
 
+### 7.6 Provision a Customer Account and View Assigned Devices
+
+1. A super administrator selects an active customer organization, creates a customer account with a validated email/password, and assigns that organization. Account creation, assignment and deactivation are audited without passwords or hashes. There is no public registration, invitation-email integration or automatic credential delivery in this scope.
+2. The customer signs in and enters the dedicated customer panel. Session restoration and direct links respect the authenticated role; staff pages are unavailable.
+3. The panel displays only currently assigned, non-archived devices: serial, model, software version, installation location, estimated connection status and last successful communication. It may show only organization-scoped device/online/offline counts. Internal contacts, notes, credentials, raw payloads, events/faults, release metadata and audit records are excluded.
+4. Connection status uses the configurable 15-minute threshold, shows its freshness basis, and explicitly handles never-connected devices. Viewing status does not establish a remote connection, prove current availability or permit controlling a test.
+5. Search, online/offline filtering, pagination and detail lookup stay within the same organization. Empty fleet, no matches, loading, stale data, API errors and inaccessible details have distinct states.
+6. Logout ends the server session. Expiry, account deactivation, missing membership or organization archival blocks subsequent protected requests and clears displayed customer data. Reassignment of a device removes its visibility for the previous organization on the next request. Previously viewed information cannot be retroactively erased; do not continue presenting cached data after access denial.
+
 ## 8. Functional Requirements
 
 ### 8.1 Authentication and Authorization
 
 - All dashboard pages and administrative APIs require authentication, except explicitly public sign-in and health endpoints.
 - Enforce role-based access on the server; hiding a button in the UI is not an authorization control.
-- Support super administrator and support staff roles in Phase 1.
+- Support super administrator, support staff, and the limited customer role in Phase 1; apply the matrix in section 5.4.
 - Store passwords using a modern, slow password hash; do not store or log plaintext passwords.
 - Use secure session handling (Secure, HttpOnly, and appropriate SameSite cookies when cookie sessions are used), CSRF protection where applicable, rate limits on sign-in, and session revocation.
 - Record actor, action, target, time, and outcome for security-sensitive changes.
-- Customer access in a future phase must enforce organization-level data isolation in every API query.
+- Customer access must enforce organization-level data isolation in every list, detail, search, filter, pagination count and aggregate query. Resolve organization from the authenticated account, never a caller-selected organization ID.
+- Re-evaluate membership, role, active account and organization status on every protected request. Missing membership, mixed staff/customer identity, archived organization or inactive account denies access; deactivation or membership removal denies existing sessions on their next request. Device reassignment removes the old organization’s access on subsequent requests.
+- Customer login uses the secure browser session lifecycle, generic invalid-credential responses, CSRF, login throttling, expiry and server-side logout revocation; staff and device authentication retain their separate permissions.
 
 ### 8.2 Customer Management
 
@@ -205,6 +234,7 @@ A customer may eventually sign in and view only their own organization’s devic
 ## 9. Core Data Entities
 
 - **User:** identity, credential hash/provider reference, role, status, last sign-in, audit timestamps.
+- **Customer Membership:** unique user reference and protected organization reference; exactly one organization per customer account, multiple accounts per organization. Customer identities cannot also carry staff privileges.
 - **Customer:** organization profile, contacts, status, timestamps.
 - **Device:** unique serial, model, customer reference, device credential reference/status, application version, last check-in, deployment metadata, status.
 - **Device Event:** stable event ID, device reference, type/code, occurrence and receipt timestamps, reported state, software version, structured payload, deduplication key.
@@ -255,10 +285,16 @@ Future entities should include **License** and **Approved Test Sheet** without c
 6. Resending an already accepted event ID creates no duplicate; the device receives an acknowledgement that allows its local queue to advance.
 7. Events uploaded after an outage appear with their original event time and are identifiable as delayed when receipt time differs materially.
 8. Fault states are displayed as reported by the device and are not modified by server-side diagnosis.
-9. Users can identify online/offline status, active faults, and update outcomes from the inventory/detail views.
+9. Staff can identify online/offline status, active faults, and update outcomes from the inventory/detail views. Customers receive only the limited device/connectivity view in section 7.6.
 10. Only a super administrator can create a release record; the record specifies all devices or selected devices and publishes automatically. The device verifies package integrity and defers installation while testing is active.
 11. The interface works at mobile and desktop widths, supports both themes, respects reduced-motion settings, and remains keyboard operable.
 12. Administrative changes and update lifecycle transitions are auditable without exposing secrets.
+
+13. A super administrator can provision and deactivate a customer account linked to exactly one organization; unauthorized provisioning and role assignment are rejected.
+14. Customers can log in/out, restore valid sessions, and view their own device list/details/connectivity with live backend data; wrong credentials, inactive accounts and expired sessions are handled safely.
+15. Customer A cannot read Customer B's records or counts through list, direct detail URL, search, filters, pagination or aggregates. Missing membership fails closed; device reassignment removes the previous organization's access on subsequent requests.
+16. Customer sessions cannot invoke staff mutations, administer users, obtain credentials, access audit/event/release data, or use device-authenticated APIs. Existing staff workflows remain functional.
+17. Customer connectivity uses the configured threshold, correct boundary behavior, explicit freshness and never-connected state; no demo fallback or remote-control/connect action is presented.
 
 ## 12. Open Product Decisions
 
@@ -272,7 +308,7 @@ The following implementation details remain open and should be resolved before p
 - What rollback approval is required?
 - Should logs be downloadable/exportable in the MVP, and what fields may be included?
 - What are the production targets for availability, ingestion response time, backup, and recovery?
-- When should customer portal access and the second UI language be introduced?
+- When should expanded customer self-service and the second UI language be introduced? Basic customer login/device visibility is approved for this MVP.
 
 ## 13. Product Success Measures
 
@@ -287,15 +323,15 @@ The following implementation details remain open and should be resolved before p
 
 - Device-side Python software can be updated to persist a durable event queue, generate stable event IDs, authenticate to the API, retry safely, and report update state.
 - Devices can report a safe/idle state, but the device—not the server—decides whether installation is safe.
-- Initial dashboard users are internal staff; customer access is deferred while tenant boundaries are included in the architecture.
+- MVP users include internal staff and administrator-provisioned customer accounts with server-enforced organization isolation and read-only device visibility.
 - The dashboard may show sample data during visual prototyping, but production must clearly separate sample/demo data from live device data.
 - Product-specific retention, uptime, and scale targets remain to be agreed before production launch.
 
 ## 15. Confirmed Implementation Decisions
 
 - **MVP scope:** Customer registration, device/log ingestion and review, and Python software updates are all in Phase 1.
-- **Users:** Internal super administrators and support staff only. Customers do not have accounts in Phase 1.
-- **Authentication:** Email and password; staff account creation is administrator-controlled.
+- **Users:** Internal super administrators, support staff, and customer accounts limited to their organization’s device/connectivity panel.
+- **Authentication:** Email and password; staff and customer account provisioning is super-administrator-controlled. No public or customer self-registration.
 - **Languages:** Persian (Farsi) and RTL for the initial UI; externalized strings and locale-aware presentation prepare for a second language.
 - **Backend:** Python with Django.
 - **Database:** PostgreSQL.
@@ -309,7 +345,7 @@ The following implementation details remain open and should be resolved before p
 - **Update links:** The package hosting provider will be selected later; the release API currently accepts a full HTTPS package URL.
 - **Release authenticity:** Review the current device updater before choosing a package-signing mechanism. SHA-256 is recorded, but by itself does not authenticate the publisher.
 - **Reports:** Search, filtering, and detail views are included; file export is deferred.
-- **Frontend integration:** The current dashboard remains a visual prototype using sample data while the real backend/API is implemented.
+- **Frontend integration:** Preserve the explicitly separated demo dashboard and prototype. The working staff console and the required customer panel use real backend authentication/data without sample fallback; the prototype supplies the Persian RTL design baseline.
 - **External hosting:** The package host is not selected yet; release records accept an HTTPS URL so the host can be chosen later.
 - **Update signing:** Existing device updater capabilities need review before deciding the production signing protocol. The current API records a SHA-256 digest but does not yet provide publisher-signature verification.
-- **Requested build outcome:** Implement a working backend and API, not only a product document or a sample-data UI.
+- **Requested build outcome:** Deliver the backend/API and working staff/customer application flows defined by the approved plan. The 2026-11-18 scope-alignment task updates documents and Beads only; customer implementation is tracked separately by CUST-001 through CUST-007.

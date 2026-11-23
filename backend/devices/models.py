@@ -1,7 +1,15 @@
-import uuid
-
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
+
+
+class StaffLoginThrottleBucket(models.Model):
+    """Shared, locked login counters; store a keyed digest rather than a raw IP."""
+
+    key = models.CharField(max_length=64, primary_key=True)
+    window_started_at = models.DateTimeField(default=timezone.now, db_index=True)
+    attempt_count = models.PositiveIntegerField(default=0)
 
 
 class Customer(models.Model):
@@ -9,6 +17,8 @@ class Customer(models.Model):
     contact_name = models.CharField(max_length=160)
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=40, blank=True)
+    address = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
     is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -18,6 +28,20 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.organization_name
+
+
+class CustomerMembership(models.Model):
+    """Explicit portal identity; never infer ownership from contact details."""
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="customer_membership")
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="memberships")
+
+    def clean(self):
+        super().clean()
+        if self.user_id and (
+            self.user.is_staff or self.user.is_superuser or self.user.groups.filter(name="support").exists()
+        ):
+            raise ValidationError({"user": "A customer account cannot also have staff privileges."})
 
 
 class Device(models.Model):
@@ -78,7 +102,7 @@ class DeviceEvent(models.Model):
     code = models.CharField(max_length=100, db_index=True)
     summary = models.CharField(max_length=300, blank=True)
     occurred_at = models.DateTimeField(db_index=True)
-    received_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    received_at = models.DateTimeField(default=timezone.now, editable=False, db_index=True)
     state = models.CharField(max_length=16, choices=State.choices, default=State.INFO, db_index=True)
     software_version = models.CharField(max_length=80, blank=True)
     metadata = models.JSONField(default=dict, blank=True)
@@ -86,7 +110,15 @@ class DeviceEvent(models.Model):
     class Meta:
         ordering = ["-occurred_at", "-id"]
         constraints = [models.UniqueConstraint(fields=["device", "event_id"], name="uniq_device_event_id")]
-        indexes = [models.Index(fields=["device", "-occurred_at"]), models.Index(fields=["code", "state"])]
+        indexes = [
+            models.Index(fields=["device", "-occurred_at"], name="devices_dev_device__fc2df9_idx"),
+            models.Index(fields=["code", "state"], name="devices_dev_code_48d6b9_idx"),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self._state.adding is False:
+            raise ValueError("Device events are immutable; create a new event for each device report.")
+        super().save(*args, **kwargs)
 
 
 class DeviceFault(models.Model):
@@ -144,6 +176,8 @@ class UpdateAssignment(models.Model):
     allow_downgrade = models.BooleanField(default=False)
     state = models.CharField(max_length=16, choices=State.choices, default=State.AVAILABLE)
     result_code = models.CharField(max_length=120, blank=True)
+    reported_at = models.DateTimeField(null=True, blank=True)
+    report_received_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
