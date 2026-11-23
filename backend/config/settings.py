@@ -130,6 +130,10 @@ if not DEBUG and (not SECRET_KEY or SECRET_KEY.startswith("replace-with-")):
 if not DEBUG and (not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS):
     raise ValueError("DJANGO_ALLOWED_HOSTS must contain explicit hostnames when DEBUG is false.")
 SECURE_CONTENT_TYPE_NOSNIFF = True
+# Enable only behind an ingress that overwrites X-Forwarded-Proto and prevents
+# clients from reaching Gunicorn directly with spoofed forwarding headers.
+if os.environ.get("DJANGO_TRUST_PROXY_HTTPS", "false").lower() == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
 X_FRAME_OPTIONS = "DENY"

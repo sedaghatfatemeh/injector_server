@@ -29,6 +29,15 @@ database and Django variables separately (see `.env.example`); do not pass secre
 as build arguments. Run `python manage.py migrate` as a one-off release command
 before serving traffic. The image does not run migrations automatically.
 
+If TLS terminates at the hosting ingress, enable `DJANGO_TRUST_PROXY_HTTPS=true`
+only after ensuring that ingress overwrites `X-Forwarded-Proto` with the actual
+client scheme and Gunicorn is reachable only through that trusted ingress.
+This makes Django recognize proxied HTTPS while retaining HTTPS redirects and
+Secure cookies. Without it, HTTPS requests forwarded internally over HTTP can
+redirect repeatedly to the same URL. The default is `false` for direct hosting.
+For this deployment, use `DJANGO_ALLOWED_HOSTS=pishgamanshargh.darkube.ir` and
+`CSRF_TRUSTED_ORIGINS=https://pishgamanshargh.darkube.ir` with `DJANGO_DEBUG=false`.
+
 Use Python 3.12 and PostgreSQL 17. Copy `.env.example` to `.env`, set the database credentials, and export those variables in the shell (Django does not load `.env` automatically). The Compose setup at the repository root provides PostgreSQL and the API container.
 
 ```powershell
