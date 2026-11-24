@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, AlertTriangle, Check, Cpu, Download, FileClock, LogOut, Menu, Moon, Plus, RefreshCw, Search, ShieldCheck, Sun, Wifi, WifiOff, X } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Activity, Check, Cpu, Download, FileClock, LogOut, Menu, Moon, Plus, RefreshCw, Search, ShieldCheck, Sun, X } from 'lucide-react';
 import { api } from './api.js';
 import './live.css';
 import EventHistory from './EventHistory.jsx';
@@ -9,6 +9,8 @@ import CustomerUsers from './CustomerUsers.jsx';
 import CustomerPanel from './CustomerPanel.jsx';
 import Dialog from './Dialog.jsx';
 import { readTheme, rememberTheme, shellText } from './locale.js';
+import DashboardOverview, { BrandMark, StaffMasthead } from './DashboardOverview.jsx';
+import './dashboard.css';
 
 function rows(payload) {
   return Array.isArray(payload) ? payload : payload?.results || [];
@@ -31,7 +33,6 @@ export default function LiveConsole() {
   const [summary, setSummary] = useState(null);
   const [devices, setDevices] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [events, setEvents] = useState([]);
   const [eventRefresh, setEventRefresh] = useState(0);
   const [releases, setReleases] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -68,7 +69,6 @@ export default function LiveConsole() {
     setSummary(null);
     setDevices([]);
     setCustomers([]);
-    setEvents([]);
     setReleases([]);
     setAssignments([]);
     setPassword('');
@@ -86,19 +86,19 @@ export default function LiveConsole() {
       if (query.trim() && ['devices', 'customers'].includes(page)) {
         if (page === 'devices') deviceParams.search = query.trim();
       }
-      if (onlineFilter) deviceParams.online = onlineFilter;
+      if (page === 'devices' && onlineFilter) deviceParams.online = onlineFilter;
+      if (page === 'overview') deviceParams.ordering = '-created_at';
       const customerParams = {};
       if (page === 'customers') customerParams.search = query.trim();
       if (page === 'customers') customerParams.is_archived = 'false';
-      const [nextSummary, nextDevices, nextCustomers, nextEvents, nextReleases, nextAssignments] = await Promise.all([
+      const [nextSummary, nextDevices, nextCustomers, nextReleases, nextAssignments] = await Promise.all([
         api.summary(), api.devices(deviceParams), api.customers(customerParams),
-        page === 'overview' ? api.events() : Promise.resolve([]), api.releases(), api.assignments(),
+        api.releases(), api.assignments(),
       ]);
       if (revision !== dataRevision.current) return;
       setSummary(nextSummary);
       setDevices(rows(nextDevices));
       setCustomers(rows(nextCustomers));
-      setEvents(rows(nextEvents));
       setReleases(rows(nextReleases));
       setAssignments(rows(nextAssignments));
     } catch (cause) {
@@ -245,7 +245,6 @@ export default function LiveConsole() {
     } catch (cause) { setError(cause.message); }
   }
 
-  const visibleEvents = useMemo(() => events.slice(0, page === 'overview' ? 6 : events.length), [events, page]);
   const menu = [
     ['overview', shellText.overview, Activity], ['devices', shellText.devices, Cpu], ['customers', shellText.customers, ShieldCheck],
     ['events', shellText.events, FileClock], ['releases', shellText.releases, Download],
@@ -269,10 +268,10 @@ export default function LiveConsole() {
   if (role === 'customer') return <CustomerPanel organization={organization} email={email} theme={theme}
     onTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')} onLogout={signOut} onSessionExpired={sessionExpired} parentError={error}/>;
 
-  return <main className="live-app" dir="rtl"><a className="live-skip" href="#live-content">{shellText.skipNavigation}</a><aside className="live-sidebar"><div className="live-brand"><Cpu/><div><b>پیشگامان شرق</b><span>مدیریت ناوگان</span></div></div>{navigation}<div className="live-sidebar-foot"><span>{isAdmin?'مدیر کل':'پشتیبان'}</span><button onClick={signOut}><LogOut size={16}/> خروج</button></div></aside>
-    <section className="live-main" id="live-content" tabIndex={-1}><header className="live-top"><div><h1>{menu.find(([key])=>key===page)?.[1]}</h1><p>{busy?'در حال دریافت اطلاعات…':`آخرین به‌روزرسانی: ${formatDate(summary?.generated_at)}`}</p></div><div className="live-actions"><button className="live-icon live-menu-toggle" aria-label={shellText.openNavigation} aria-haspopup="dialog" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(true)}><Menu size={18}/></button><button className="live-icon" onClick={() => { loadData(); setEventRefresh(value => value + 1); }} aria-label="بازخوانی"><RefreshCw size={17}/></button><button className="live-icon" onClick={() => setTheme(theme === 'dark'?'light':'dark')} aria-label="تغییر پوسته">{theme==='dark'?<Sun size={17}/>:<Moon size={17}/>}</button><button className="live-icon" onClick={signOut} aria-label="خروج"><LogOut size={17}/></button></div></header>
+  return <main className="live-app staff-dashboard" dir="rtl"><a className="live-skip" href="#live-content">{shellText.skipNavigation}</a><aside className="live-sidebar"><div className="live-brand"><BrandMark/><div><b>پیشگامان شرق</b><span>مدیریت ناوگان</span></div></div>{navigation}<div className="live-sidebar-foot"><span>{isAdmin?'مدیر کل':'پشتیبان'}</span><button onClick={signOut}><LogOut size={16}/> خروج</button></div></aside>
+    <section className="live-main" id="live-content" tabIndex={-1}><StaffMasthead isAdmin={isAdmin}/><header className="live-top"><div><h1>{menu.find(([key])=>key===page)?.[1]}</h1><p>{busy?'در حال دریافت اطلاعات…':`آخرین به‌روزرسانی: ${formatDate(summary?.generated_at)}`}</p></div><div className="live-actions"><button className="live-icon live-menu-toggle" aria-label={shellText.openNavigation} aria-haspopup="dialog" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(true)}><Menu size={18}/></button><button className="live-icon" onClick={() => { loadData(); setEventRefresh(value => value + 1); }} aria-label="بازخوانی"><RefreshCw size={17}/></button><button className="live-icon" onClick={() => setTheme(theme === 'dark'?'light':'dark')} aria-label="تغییر پوسته">{theme==='dark'?<Sun size={17}/>:<Moon size={17}/>}</button><button className="live-icon" onClick={signOut} aria-label="خروج"><LogOut size={17}/></button></div></header>
       {error&&<div className="live-error" role="alert">{error}<button onClick={() => setError('')} aria-label="بستن"><X size={15}/></button></div>}
-      {page==='overview'&&<><div className="live-metrics">{[[Cpu,'کل دستگاه‌ها',summary?.device_count],[Wifi,'متصل',summary?.online_count],[WifiOff,'قطع ارتباط',summary?.offline_count],[AlertTriangle,'خطاهای فعال',summary?.active_fault_count],[FileClock,'رویدادهای ۲۴ ساعت',summary?.event_count_24h]].map(([Icon,title,value])=><article key={title}><Icon/><span>{title}</span><b>{value??'—'}</b></article>)}</div><section className="live-card"><h2>آخرین دستگاه‌ها</h2><DeviceTable devices={devices.slice(0,8)} canEdit={isAdmin} onSelect={openDevice} onEdit={(record)=>{setEditing(record);setModal('device');}} onArchive={(record)=>archiveRecord('device',record)}/></section><section className="live-card"><h2>رویدادهای اخیر</h2><EventTable events={visibleEvents}/></section></>}
+      {page==='overview'&&<DashboardOverview summary={summary} devices={devices} busy={busy} isAdmin={isAdmin} onDevice={openDevice} onNavigate={(next)=>{setPage(next);setQuery('');}}/>}
       {page==='devices'&&<section className="live-card"><Toolbar query={query} setQuery={setQuery} placeholder="جست‌وجوی سریال، مشتری یا مدل" action={isAdmin?()=>{setEditing(null);setModal('device');}:null} actionLabel="ثبت دستگاه"/><div className="live-filter"><label>وضعیت اتصال<select value={onlineFilter} onChange={event=>setOnlineFilter(event.target.value)}><option value="">همه</option><option value="true">متصل</option><option value="false">قطع ارتباط</option></select></label></div><DeviceTable devices={devices} canEdit={isAdmin} onSelect={openDevice} onEdit={(record)=>{setEditing(record);setModal('device');}} onArchive={(record)=>archiveRecord('device',record)} onProvision={provision}/></section>}
       {page==='customers'&&<section className="live-card"><Toolbar query={query} setQuery={setQuery} placeholder="جست‌وجوی نام سازمان یا تماس" action={isAdmin?()=>{setEditing(null);setModal('customer');}:null} actionLabel="ثبت مشتری"/><CustomerTable customers={customers} canEdit={isAdmin} onEdit={(record)=>{setEditing(record);setModal('customer');}} onArchive={(record)=>archiveRecord('customer',record)}/></section>}
       {page==='events'&&<EventHistory refreshKey={eventRefresh} onSessionExpired={sessionExpired}/>}

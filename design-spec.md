@@ -1,5 +1,21 @@
 # Design Language | Pishgaman Shargh
 
+## Approved staff dashboard reference (2026-11-24)
+
+The owner approved the supplied red/graphite dashboard image as the new staff
+visual baseline. It supersedes the green accent and compact card radii below
+for the live staff shell: dark right sidebar and masthead, red active navigation,
+light cool-gray work area, softly shadowed cards, an industrial vector banner,
+and responsive shortcuts. Original logo and injector photography are not present
+in the repository; the current banner artwork is an approximation, not an exact
+reproduction. The historical prototype remains unchanged.
+
+Use real API aggregates only. The overview shows fleet totals, recent connectivity,
+reported active faults and events received over 24 hours. Its connectivity chart
+replaces the reference's test trend because test counts/runtime are not available.
+Do not add export, test control, tests or program management to imitate the image.
+The customer panel retains its existing organization-scoped workflow and theme.
+
 ## Experience Goal
 
 The staff dashboard should help administrators and support staff understand fleet health and recent reports at a glance. The dedicated customer panel helps a customer inspect only their own organization’s assigned devices and estimated connectivity. The interface is Persian and right-to-left, following a “summary first, details when needed” pattern: essential data remains visible in cards and tables, while history, supporting information, and actions are available in expandable rows, accordions, detail panels, or dedicated pages. Frequent tasks such as searching by serial number and reviewing faults should be one action away.
