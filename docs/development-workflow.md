@@ -62,6 +62,36 @@ provides the project workflow without changing global IDE settings.
 
 ## Storage, Git, and recovery
 
+### Windows agent sandbox access errors
+
+Verified on 2026-11-24 with Beads 1.3.4: the restricted agent execution context
+can report both of these errors while the existing database is healthy:
+
+```text
+workspacegate: gate parent ... must exist: Access is denied
+embeddeddolt: switching to database: Error 1049: database not found: injector
+```
+
+The same wrapper commands succeed under the normal workspace owner's access.
+This is an execution-permission problem, not evidence of missing issues or a
+corrupt database. In the agent, use the execution tool's explicit approval for
+running the same `./scripts/bd.cmd ...` command outside its restricted sandbox.
+Do not bypass that approval with another shell, alternate database paths or ACL
+changes. A user-run PowerShell terminal can invoke the wrapper normally; an
+administrator terminal is not required by the verified workaround.
+
+First verify access with `./scripts/bd.cmd ready` and a known issue, such as
+`./scripts/bd.cmd show injector-cz3`. To check local artifacts, use
+`./scripts/bd.cmd doctor --check=artifacts`. The unqualified `bd doctor` command
+does not support this embedded backend; its notice alone does not indicate a
+broken installation. Do not run `init`, `--reinit-local` or import the JSONL
+snapshot over the populated database to address this access error.
+
+After mutations, export with the same approved execution context:
+`./scripts/bd.cmd export -o .beads/issues.jsonl`. Keep the original database and
+its history. A missing Dolt remote is expected for this repository's local-only
+setup; do not add a remote or push the database merely to silence that warning.
+
 Commit `.beads/config.yaml`, `metadata.json`, `.gitignore`, `README.md`,
 `plan-map.json`, and the refreshed `issues.jsonl` snapshot with relevant changes.
 The live database at `.beads/embeddeddolt/`, CLI files under `.local/`, locks,

@@ -1,0 +1,8 @@
+.model-choices { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; border: 1px solid var(--live-border); border-radius: 10px; padding: 12px; margin: 0; }
+.model-choices legend { color: var(--live-muted); font-size: 12px; padding-inline: 6px; }
+.model-choices label { display: flex; flex-direction: column; align-items: center; position: relative; gap: 9px; padding: 13px 7px; border: 1px solid var(--live-border); border-radius: 9px; cursor: pointer; text-align: center; font-size: 11px; }
+.model-choices label:has(input:checked) { background: color-mix(in srgb,var(--live-accent) 9%,var(--live-panel)); border-color: var(--live-accent); color: var(--live-accent); }
+.model-choices input { position: absolute; inset: 7px 7px auto auto; accent-color: var(--live-accent); }
+.model-choices svg { width: 30px; height: 30px; margin-top: 9px; }
+.model-choices:disabled label { cursor: default; opacity: .75; }
+@media(max-width:450px) { .model-choices { grid-template-columns: repeat(2,minmax(0,1fr)); }.model-editions { grid-template-columns: 1fr; }.model-editions label { flex-direction: row; padding-right: 30px; }.model-editions svg { margin: 0; } }

@@ -1,4 +1,5 @@
-FROM node:22-bookworm-slim AS frontend
+ARG NODE_IMAGE=node:22-bookworm-slim
+FROM ${NODE_IMAGE} AS frontend
 WORKDIR /frontend
 COPY package.json package-lock.json ./
 RUN npm ci

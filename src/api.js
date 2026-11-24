@@ -34,6 +34,19 @@ async function request(path, options = {}) {
 
 export const api = {
   request,
+  deviceModels: async () => {
+    const all = [];
+    let url = '/api/v1/device-models/';
+    while (url) {
+      const data = await request(url);
+      all.push(...(Array.isArray(data) ? data : data.results || []));
+      const next = data.next ? new URL(data.next, window.location.origin) : null;
+      url = next ? next.pathname + next.search : null;
+    }
+    return all;
+  },
+  createDeviceModel: data => request('/api/v1/device-models/', { method: 'POST', body: JSON.stringify(data) }),
+  updateDeviceModel: (id, data) => request(`/api/v1/device-models/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
   csrf: async () => { const result = await request('/api/v1/auth/csrf/'); csrfToken = result.csrfToken; return result; },
   login: (email, password) => request('/api/v1/auth/login/', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request('/api/v1/auth/logout/', { method: 'POST', body: '{}' }),

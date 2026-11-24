@@ -48,3 +48,34 @@ Device history hides an archived customer by default. Add `device__customer__is_
 ## Verification
 
 `backend/devices/tests/test_inventory.py` covers normalization/search, minimum contacts, assignment boundaries, initial and reported software versions, stale-edit preservation, audit rollback, archive/history access, scoped pagination and concurrent contact/serial edits against PostgreSQL. Use the Pytest command in the [backend README](../backend/README.md). Browser acceptance additionally exercises real customer/device forms against an isolated database; QA records are removed with that database.
+## Device model catalog (approved 2026-11-24)
+
+`GET /api/v1/device-models/` lists the paginated catalog for authenticated staff;
+supports `search`, `kind`, `edition` and `is_active` filters. Customers and device
+bearer credentials cannot access this endpoint. Only super administrators may
+POST a model or PATCH/PUT its detail endpoint. Deletion is unsupported.
+
+Fields: `id`, `code` (unique, normalized uppercase, at most 120 characters),
+`display_name`, `kind` (`unit`, `cr`, `combo`, `pump`, `pro`), `edition` (`b`, `pc`,
+`e`), `is_active`, and read-only labels/timestamps. Code, kind and edition are
+immutable after creation; display name and active status can be edited with audit
+records. Inactive models remain visible for existing device records but cannot
+be newly assigned. The device/model link uses a protected foreign key.
+
+New device registrations must include `device_model` (catalog ID) and `customer`;
+free-text `model_name` alone is no longer sufficient. A matching `model_name` may
+be supplied, but conflicting values are rejected. Responses keep `model_name` as
+the compatibility code and add `device_model` and `model_display_name` for staff.
+Each customer can own multiple devices; serial uniqueness remains global.
+
+Run migrations 0007 and 0008 before deploying this frontend/API pair. They seed
+the 15 reference codes (`AD-{UNIT,CR,COMBO,PUMP,PRO}-{B,PC,E}`). Existing device
+strings that exactly match these codes are linked; unmatched legacy strings stay
+unchanged with a null catalog ID. Editing other fields on those devices does not
+require inventing a mapping. Changing their model requires selecting a catalog ID.
+
+Release compatibility remains keyed by the existing `model_name` string. Migration
+does not rewrite release metadata, assignments or legacy names. Renaming a catalog
+display label has no effect on compatibility; changing a device's selected model
+intentionally changes its compatibility key and is audited. Customer responses
+retain their existing safe allowlist; this does not expose the staff catalog.

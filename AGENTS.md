@@ -3,6 +3,7 @@
 This project uses Beads (`bd`) for issue tracking.
 
 - On Windows, invoke `./scripts/bd.cmd`; it uses `.local/beads/bd.exe` or `bd.exe` on PATH.
+- In a restricted Windows agent sandbox, Beads may report `workspace gate ... Access is denied` followed by embedded Dolt `database not found: injector` even when the database exists. Retry the command using the execution tool's explicit escalation/approval mechanism; this needs the normal user's filesystem access, not an administrator terminal. Do not reinitialize, import over, relocate, or change ACLs on the existing database to work around sandbox restrictions. See `docs/development-workflow.md` for verified diagnostics.
 - Run `./scripts/bd.cmd prime` for workflow context and `./scripts/bd.cmd ready` for available work.
 - Inspect an issue with `show <id>`, claim it with `update <id> --claim`, and close it with `close <id> --reason "..."` after verification.
 - Preserve plan references such as `ENG-001` in labels. `.beads/plan-map.json` maps the implementation plan to Beads IDs.

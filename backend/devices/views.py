@@ -123,7 +123,7 @@ class DeviceViewSet(AuditedStaffActionsMixin, viewsets.ModelViewSet):
     serializer_class = DeviceSerializer
     permission_classes = [IsAuthenticated, IsStaffUser]
     search_fields = ["serial_number", "model_name", "customer__organization_name"]
-    filterset_fields = ["customer", "model_name", "is_archived"]
+    filterset_fields = ["customer", "model_name", "device_model", "is_archived"]
     filter_backends = [DjangoFilterBackend, SearchFilter, InventoryOrderingFilter]
     ordering_fields = ["serial_number", "model_name", "last_seen_at", "created_at"]
 

@@ -18,6 +18,8 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
     restart: unless-stopped
     env_file: .env
     environment:

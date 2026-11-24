@@ -75,7 +75,7 @@ def test_archived_customer_cannot_receive_new_assignments_and_reassignment_is_au
 def test_device_registration_and_readonly_operational_facts_have_consistent_responses():
     client = admin_client()
     owner = customer()
-    response = client.post("/api/v1/devices/", {"serial_number": "  REGISTER-001  ", "model_name": "M1", "customer": owner.pk,
+    response = client.post("/api/v1/devices/", {"serial_number": "  REGISTER-001  ", "device_model": catalog_registration_model(), "customer": owner.pk,
                            "software_version": "1.0.0", "install_state": "idle", "is_online": True}, format="json")
     assert response.status_code == 201
     assert response.data["serial_number"] == "REGISTER-001"
@@ -124,7 +124,7 @@ def test_inventory_and_audit_writes_are_atomic_and_storage_failures_are_not_seri
         "customer_create": ("post", "/api/v1/customers/", {"organization_name": "New", "contact_name": "Ali", "contact_phone": "123"}),
         "customer_update": ("patch", f"/api/v1/customers/{owner.pk}/", {"contact_name": "Changed"}),
         "customer_archive": ("delete", f"/api/v1/customers/{owner.pk}/", {}),
-        "device_create": ("post", "/api/v1/devices/", {"serial_number": "NEW-SERIAL", "model_name": "M1", "customer": owner.pk}),
+        "device_create": ("post", "/api/v1/devices/", {"serial_number": "NEW-SERIAL", "device_model": catalog_registration_model(), "customer": owner.pk}),
         "device_update": ("patch", f"/api/v1/devices/{device.pk}/", {"location": "Changed"}),
         "device_archive": ("delete", f"/api/v1/devices/{device.pk}/", {}),
     }
@@ -272,3 +272,8 @@ def test_concurrent_serial_edits_return_a_field_conflict_instead_of_server_error
     assert sorted(status for status, _ in results) == [200, 400]
     assert all(has_field for _, has_field in results)
     assert Device.objects.filter(serial_number=serial).count() == 1
+
+
+def catalog_registration_model():
+    from devices.models import DeviceModel
+    return DeviceModel.objects.get_or_create(code="AD-UNIT-B", defaults={"display_name": "Unit", "kind": "unit", "edition": "b"})[0].pk

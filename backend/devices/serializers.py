@@ -15,7 +15,7 @@ from django.utils.dateparse import parse_datetime
 from packaging.version import InvalidVersion, Version
 from rest_framework import serializers
 
-from .models import Customer, Device, DeviceEvent, SoftwareRelease, UpdateAssignment
+from .models import Customer, Device, DeviceEvent, DeviceModel, SoftwareRelease, UpdateAssignment
 from .inventory import normalize_phone
 
 
@@ -104,6 +104,9 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 class DeviceSerializer(serializers.ModelSerializer):
+    model_name = serializers.CharField(required=False, max_length=120)
+    device_model = serializers.PrimaryKeyRelatedField(queryset=DeviceModel.objects.all(), required=False)
+    model_display_name = serializers.CharField(source="device_model.display_name", read_only=True, default="")
     customer_name = serializers.CharField(source="customer.organization_name", read_only=True)
     customer_is_archived = serializers.BooleanField(source="customer.is_archived", read_only=True)
     is_online = serializers.SerializerMethodField()
@@ -131,14 +134,39 @@ class DeviceSerializer(serializers.ModelSerializer):
         return normalize_phone(value)
 
     def validate(self, attrs):
+        model = attrs.get("device_model")
+        if not self.instance and model is None:
+            raise serializers.ValidationError({"device_model": "Choose a catalog model."})
+        if model is not None:
+            if not model.is_active and (not self.instance or self.instance.device_model_id != model.pk):
+                raise serializers.ValidationError({"device_model": "Choose an active model."})
+            if "model_name" in attrs and attrs["model_name"] != model.code:
+                raise serializers.ValidationError({"model_name": "The model name must match the selected model code."})
+            attrs["model_name"] = model.code
+        elif "model_name" in attrs and self.instance and attrs["model_name"] != self.instance.model_name:
+            raise serializers.ValidationError({"device_model": "Choose a catalog model to change the device model."})
         customer = attrs.get("customer", getattr(self.instance, "customer", None))
         if self.instance and self.instance.is_archived and attrs.get("is_archived") is False and customer.is_archived:
             raise serializers.ValidationError({"customer": "Choose an active customer before restoring a device."})
         return attrs
 
+    def create(self, validated_data):
+        with transaction.atomic():
+            model = DeviceModel.objects.select_for_update().get(pk=validated_data["device_model"].pk)
+            validated_data["device_model"] = model
+            self.validate(validated_data)
+            return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        with transaction.atomic():
+            if "device_model" in validated_data:
+                validated_data["device_model"] = DeviceModel.objects.select_for_update().get(pk=validated_data["device_model"].pk)
+                self.validate(validated_data)
+            return super().update(instance, validated_data)
+
     class Meta:
         model = Device
-        fields = ["id", "serial_number", "model_name", "customer", "customer_name", "customer_is_archived", "software_version", "last_seen_at", "is_online", "install_state", "active_fault_count", "location", "site_contact_name", "site_contact_phone", "is_archived", "created_at", "updated_at"]
+        fields = ["id", "serial_number", "model_name", "device_model", "model_display_name", "customer", "customer_name", "customer_is_archived", "software_version", "last_seen_at", "is_online", "install_state", "active_fault_count", "location", "site_contact_name", "site_contact_phone", "is_archived", "created_at", "updated_at"]
         read_only_fields = ["id", "last_seen_at", "is_online", "install_state", "active_fault_count", "created_at", "updated_at"]
 
 

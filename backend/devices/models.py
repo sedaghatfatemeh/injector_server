@@ -44,6 +44,34 @@ class CustomerMembership(models.Model):
             raise ValidationError({"user": "A customer account cannot also have staff privileges."})
 
 
+class DeviceModel(models.Model):
+    class Kind(models.TextChoices):
+        UNIT = "unit", "یونیت"
+        CR = "cr", "کامان‌ریل"
+        COMBO = "combo", "ترکیبی یونیت و کامان‌ریل"
+        PUMP = "pump", "تست پمپ"
+        PRO = "pro", "تست کامل"
+
+    class Edition(models.TextChoices):
+        BOX = "b", "باکس کنار دستگاه"
+        COMPUTER = "pc", "کامپیوتری"
+        ECONOMY = "e", "اقتصادی"
+
+    code = models.CharField(max_length=120, unique=True)
+    display_name = models.CharField(max_length=200)
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+    edition = models.CharField(max_length=16, choices=Edition.choices)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["code"]
+        constraints = [models.UniqueConstraint(models.functions.Lower("code"), name="device_model_code_ci_unique")]
+
+    def __str__(self):
+        return f"{self.code} · {self.display_name}"
+
+
 class Device(models.Model):
     class InstallState(models.TextChoices):
         IDLE = "idle", "Idle"
@@ -52,6 +80,7 @@ class Device(models.Model):
 
     serial_number = models.CharField(max_length=80, unique=True, db_index=True)
     model_name = models.CharField(max_length=120, db_index=True)
+    device_model = models.ForeignKey(DeviceModel, null=True, blank=True, on_delete=models.PROTECT, related_name="devices")
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="devices")
     software_version = models.CharField(max_length=80, blank=True)
     last_seen_at = models.DateTimeField(null=True, blank=True, db_index=True)

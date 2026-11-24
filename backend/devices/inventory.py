@@ -44,13 +44,13 @@ def boolean_parameter(request, name, default=False):
 
 
 def device_inventory():
-    return Device.objects.select_related("customer").annotate(
+    return Device.objects.select_related("customer", "device_model").annotate(
         active_fault_count=Count("faults", filter=Q(faults__state=DeviceEvent.State.ACTIVE), distinct=True),
     ).order_by("serial_number", "pk")
 
 
 CUSTOMER_AUDIT_FIELDS = ("organization_name", "contact_name", "contact_email", "contact_phone", "address", "notes", "is_archived")
-DEVICE_AUDIT_FIELDS = ("serial_number", "model_name", "customer_id", "software_version", "location", "site_contact_name", "site_contact_phone", "is_archived")
+DEVICE_AUDIT_FIELDS = ("serial_number", "model_name", "device_model_id", "customer_id", "software_version", "location", "site_contact_name", "site_contact_phone", "is_archived")
 
 
 def snapshot(instance, fields):

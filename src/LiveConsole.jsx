@@ -11,6 +11,8 @@ import Dialog from './Dialog.jsx';
 import { readTheme, rememberTheme, shellText } from './locale.js';
 import DashboardOverview, { BrandMark, StaffMasthead } from './DashboardOverview.jsx';
 import './dashboard.css';
+import DeviceModels, { DeviceModelSelect } from './DeviceModels.jsx';
+import './device-models.css';
 
 function rows(payload) {
   return Array.isArray(payload) ? payload : payload?.results || [];
@@ -32,6 +34,7 @@ export default function LiveConsole() {
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [summary, setSummary] = useState(null);
   const [devices, setDevices] = useState([]);
+  const [deviceModels, setDeviceModels] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [eventRefresh, setEventRefresh] = useState(0);
   const [releases, setReleases] = useState([]);
@@ -68,6 +71,7 @@ export default function LiveConsole() {
     setOneTimeCredential('');
     setSummary(null);
     setDevices([]);
+    setDeviceModels([]);
     setCustomers([]);
     setReleases([]);
     setAssignments([]);
@@ -91,13 +95,14 @@ export default function LiveConsole() {
       const customerParams = {};
       if (page === 'customers') customerParams.search = query.trim();
       if (page === 'customers') customerParams.is_archived = 'false';
-      const [nextSummary, nextDevices, nextCustomers, nextReleases, nextAssignments] = await Promise.all([
+      const [nextSummary, nextDevices, nextCustomers, nextReleases, nextAssignments, nextModels] = await Promise.all([
         api.summary(), api.devices(deviceParams), api.customers(customerParams),
-        api.releases(), api.assignments(),
+        api.releases(), api.assignments(), api.deviceModels(),
       ]);
       if (revision !== dataRevision.current) return;
       setSummary(nextSummary);
       setDevices(rows(nextDevices));
+      setDeviceModels(nextModels);
       setCustomers(rows(nextCustomers));
       setReleases(rows(nextReleases));
       setAssignments(rows(nextAssignments));
@@ -170,6 +175,7 @@ export default function LiveConsole() {
         setNotice(editing ? 'اطلاعات مشتری ذخیره شد.' : 'مشتری ثبت شد.');
       } else if (modal === 'device') {
         const data = { ...value, customer: Number(value.customer) };
+        if (value.device_model) data.device_model = Number(value.device_model); else delete data.device_model;
         if (editing) await api.updateDevice(editing.id, data); else await api.createDevice(data);
         setNotice(editing ? 'اطلاعات دستگاه ذخیره شد.' : 'دستگاه ثبت شد.');
       } else if (modal === 'release') {
@@ -247,7 +253,7 @@ export default function LiveConsole() {
 
   const menu = [
     ['overview', shellText.overview, Activity], ['devices', shellText.devices, Cpu], ['customers', shellText.customers, ShieldCheck],
-    ['events', shellText.events, FileClock], ['releases', shellText.releases, Download],
+    ['models', 'مدل‌های دستگاه', Cpu], ['events', shellText.events, FileClock], ['releases', shellText.releases, Download],
     ...(isAdmin ? [['users', shellText.users, ShieldCheck], ['customer-users', shellText.customerUsers, ShieldCheck]] : []),
   ];
 
@@ -274,6 +280,7 @@ export default function LiveConsole() {
       {page==='overview'&&<DashboardOverview summary={summary} devices={devices} busy={busy} isAdmin={isAdmin} onDevice={openDevice} onNavigate={(next)=>{setPage(next);setQuery('');}}/>}
       {page==='devices'&&<section className="live-card"><Toolbar query={query} setQuery={setQuery} placeholder="جست‌وجوی سریال، مشتری یا مدل" action={isAdmin?()=>{setEditing(null);setModal('device');}:null} actionLabel="ثبت دستگاه"/><div className="live-filter"><label>وضعیت اتصال<select value={onlineFilter} onChange={event=>setOnlineFilter(event.target.value)}><option value="">همه</option><option value="true">متصل</option><option value="false">قطع ارتباط</option></select></label></div><DeviceTable devices={devices} canEdit={isAdmin} onSelect={openDevice} onEdit={(record)=>{setEditing(record);setModal('device');}} onArchive={(record)=>archiveRecord('device',record)} onProvision={provision}/></section>}
       {page==='customers'&&<section className="live-card"><Toolbar query={query} setQuery={setQuery} placeholder="جست‌وجوی نام سازمان یا تماس" action={isAdmin?()=>{setEditing(null);setModal('customer');}:null} actionLabel="ثبت مشتری"/><CustomerTable customers={customers} canEdit={isAdmin} onEdit={(record)=>{setEditing(record);setModal('customer');}} onArchive={(record)=>archiveRecord('customer',record)}/></section>}
+      {page==='models'&&<DeviceModels models={deviceModels} canEdit={isAdmin} onSaved={loadData} onSessionExpired={sessionExpired}/>}
       {page==='events'&&<EventHistory refreshKey={eventRefresh} onSessionExpired={sessionExpired}/>}
       {page==='users'&&isAdmin&&<StaffUsers onSessionExpired={sessionExpired} refreshKey={eventRefresh}/>}
       {page==='customer-users'&&isAdmin&&<CustomerUsers onSessionExpired={sessionExpired}/>}
@@ -283,11 +290,11 @@ export default function LiveConsole() {
     {navigationOpen&&<Dialog title={shellText.navigation} className="live-drawer" onClose={()=>setNavigationOpen(false)}>{navigation}</Dialog>}
     {modal&&<Dialog title={modal==='customer'?(editing?'ویرایش مشتری':'ثبت مشتری'):modal==='device'?(editing?'ویرایش دستگاه':'ثبت دستگاه'):modal==='rollback'?`تخصیص بازگشت نسخهٔ ${editing?.version}`:'ثبت نسخهٔ جدید'} onClose={()=>{setModal('');setError('');}} dismissible={!busy}><form onSubmit={modal==='rollback'?assignRollback:submitForm}>
       {modal==='customer'&&<><Field label="نام سازمان"><input name="organization_name" required maxLength="200" defaultValue={editing?.organization_name||''}/></Field><Field label="نام مسئول"><input name="contact_name" required maxLength="160" defaultValue={editing?.contact_name||''}/></Field><Field label="ایمیل"><input name="contact_email" type="email" dir="ltr" defaultValue={editing?.contact_email||''}/></Field><Field label="تلفن"><input name="contact_phone" dir="ltr" defaultValue={editing?.contact_phone||''}/></Field><Field label="نشانی"><textarea name="address" defaultValue={editing?.address||''}/></Field><Field label="یادداشت"><textarea name="notes" defaultValue={editing?.notes||''}/></Field></>}
-      {modal==='device'&&<><Field label="شماره سریال"><input name="serial_number" dir="ltr" required maxLength="80" defaultValue={editing?.serial_number||''}/></Field><Field label="مدل"><input name="model_name" required maxLength="120" defaultValue={editing?.model_name||''}/></Field><Field label="مشتری"><select name="customer" required defaultValue={editing?.customer||''}><option value="" disabled>انتخاب مشتری</option>{editing?.customer&&!customers.some(item=>!item.is_archived&&item.id===editing.customer)&&<option value={editing.customer}>{editing.customer_name}{editing.customer_is_archived?' · بایگانی‌شده':''}</option>}{customers.filter(item=>!item.is_archived).map(item=><option key={item.id} value={item.id}>{item.organization_name}</option>)}</select></Field><Field label="نسخه برنامه"><input name="software_version" dir="ltr" readOnly={Boolean(editing?.last_seen_at)} defaultValue={editing?.software_version||''}/></Field>{editing?.last_seen_at&&<p className="live-hint">نسخهٔ فعلی با گزارش دستگاه به‌روز می‌شود.</p>}<Field label="موقعیت"><input name="location" defaultValue={editing?.location||''}/></Field><Field label="نام مسئول محل"><input name="site_contact_name" defaultValue={editing?.site_contact_name||''}/></Field><Field label="تلفن مسئول محل"><input name="site_contact_phone" dir="ltr" defaultValue={editing?.site_contact_phone||''}/></Field></>}
+      {modal==='device'&&<><Field label="شماره سریال"><input name="serial_number" dir="ltr" required maxLength="80" defaultValue={editing?.serial_number||''}/></Field><DeviceModelSelect models={deviceModels} editing={editing}/><Field label="مشتری"><select name="customer" required defaultValue={editing?.customer||''}><option value="" disabled>انتخاب مشتری</option>{editing?.customer&&!customers.some(item=>!item.is_archived&&item.id===editing.customer)&&<option value={editing.customer}>{editing.customer_name}{editing.customer_is_archived?' · بایگانی‌شده':''}</option>}{customers.filter(item=>!item.is_archived).map(item=><option key={item.id} value={item.id}>{item.organization_name}</option>)}</select></Field><Field label="نسخه برنامه"><input name="software_version" dir="ltr" readOnly={Boolean(editing?.last_seen_at)} defaultValue={editing?.software_version||''}/></Field>{editing?.last_seen_at&&<p className="live-hint">نسخهٔ فعلی با گزارش دستگاه به‌روز می‌شود.</p>}<Field label="موقعیت"><input name="location" defaultValue={editing?.location||''}/></Field><Field label="نام مسئول محل"><input name="site_contact_name" defaultValue={editing?.site_contact_name||''}/></Field><Field label="تلفن مسئول محل"><input name="site_contact_phone" dir="ltr" defaultValue={editing?.site_contact_phone||''}/></Field></>}
       {modal==='release'&&<><Field label="نسخه"><input name="version" dir="ltr" required placeholder="2.5.0"/></Field><Field label="پیوند بسته HTTPS"><input name="package_url" type="url" dir="ltr" required placeholder="https://packages.example/app.whl"/></Field><Field label="SHA-256"><input name="sha256" dir="ltr" required minLength="64" maxLength="64"/></Field><Field label="مدل‌های سازگار (با کاما جدا شوند)"><input name="compatible_models" dir="ltr" placeholder="خالی یعنی همهٔ مدل‌ها"/></Field><Field label="حداقل نسخهٔ فعلی"><input name="minimum_version" dir="ltr"/></Field><Field label="یادداشت نسخه"><textarea name="release_notes"/></Field><Field label="مقصد انتشار"><select name="target_mode"><option value="all">همهٔ دستگاه‌های سازگار</option><option value="selected">انتخاب دستگاه‌ها</option></select></Field><Field label="دستگاه‌های انتخابی"><select name="target_devices" multiple size="4">{devices.filter(item=>!item.is_archived).map(item=><option key={item.id} value={item.id}>{item.serial_number} · {item.model_name}</option>)}</select></Field><p className="live-hint">انتشار خودکار انجام می‌شود. دستگاه فقط در وضعیت امن و بیکار نصب را اجرا می‌کند. SHA-256 به‌تنهایی هویت ناشر را تأیید نمی‌کند.</p></>}
       {modal==='rollback'&&<><p className="live-hint">نسخهٔ {editing?.version} در نقطهٔ امن توسط خود دستگاه اعمال می‌شود.</p><Field label="دستگاه‌های مقصد"><select name="rollback_devices" multiple required size="6">{devices.filter(item=>!item.is_archived&&(!editing?.compatible_models?.length||editing.compatible_models.includes(item.model_name))).map(item=><option key={item.id} value={item.id}>{item.serial_number} · {item.model_name} · {item.software_version||'—'}</option>)}</select></Field><Field label="دلیل تخصیص"><textarea name="reason" required minLength="3"/></Field></>}
       {error&&<p className="live-error" role="alert">{error}</p>}<footer><button type="button" className="live-secondary" onClick={()=>setModal('')}>انصراف</button><button className="live-primary" disabled={busy}>{busy?'در حال ذخیره…':modal==='rollback'?'تخصیص بازگشت':'ذخیره'}</button></footer></form></Dialog>}
-    {selected&&<Dialog title={`جزئیات دستگاه ${selected.serial_number}`} onClose={()=>setSelected(null)}><dl className="live-detail"><dt>مشتری</dt><dd>{selected.customer_name}</dd><dt>مدل</dt><dd>{selected.model_name}</dd><dt>نسخه</dt><dd>{selected.software_version||'—'}</dd><dt>آخرین ارتباط</dt><dd>{formatDate(selected.last_seen_at)}</dd><dt>وضعیت</dt><dd>{selected.is_online?'متصل':'قطع ارتباط'}</dd><dt>خطاهای فعال</dt><dd>{selected.active_fault_count||0}</dd><dt>محل</dt><dd>{selected.location||'—'}</dd></dl><h3>رویدادهای دستگاه</h3><EventTable events={selectedEvents}/><h3>وضعیت به‌روزرسانی</h3>{selectedUpdates.map(item=><p key={item.id}>{item.release_version}: {labels[item.state]||item.state} · {formatDate(item.reported_at||item.updated_at)}</p>)}{isAdmin&&<footer><button className="live-primary" onClick={()=>provision(selected)}>صدور/چرخش شناسهٔ دستگاه</button></footer>}</Dialog>}
+    {selected&&<Dialog title={`جزئیات دستگاه ${selected.serial_number}`} onClose={()=>setSelected(null)}><dl className="live-detail"><dt>مشتری</dt><dd>{selected.customer_name}</dd><dt>مدل</dt><dd>{selected.model_display_name || selected.model_name}{selected.model_display_name && <small dir="ltr"> ? {selected.model_name}</small>}</dd><dt>نسخه</dt><dd>{selected.software_version||'—'}</dd><dt>آخرین ارتباط</dt><dd>{formatDate(selected.last_seen_at)}</dd><dt>وضعیت</dt><dd>{selected.is_online?'متصل':'قطع ارتباط'}</dd><dt>خطاهای فعال</dt><dd>{selected.active_fault_count||0}</dd><dt>محل</dt><dd>{selected.location||'—'}</dd></dl><h3>رویدادهای دستگاه</h3><EventTable events={selectedEvents}/><h3>وضعیت به‌روزرسانی</h3>{selectedUpdates.map(item=><p key={item.id}>{item.release_version}: {labels[item.state]||item.state} · {formatDate(item.reported_at||item.updated_at)}</p>)}{isAdmin&&<footer><button className="live-primary" onClick={()=>provision(selected)}>صدور/چرخش شناسهٔ دستگاه</button></footer>}</Dialog>}
     {oneTimeCredential&&<Dialog title="شناسهٔ دستگاه — فقط همین‌بار نمایش داده می‌شود" onClose={()=>setOneTimeCredential('')}><p>این مقدار را در محل امن دستگاه ذخیره کنید.</p><code className="live-secret" dir="ltr">{oneTimeCredential}</code><button className="live-primary" onClick={async()=>{try { await navigator.clipboard.writeText(oneTimeCredential); setNotice('شناسه کپی شد.'); } catch { setError('کپی انجام نشد؛ شناسه را به‌صورت دستی کپی کنید.'); }}}>کپی شناسه</button></Dialog>}
     {notice&&<div className="live-notice" role="status"><Check size={17}/>{notice}<button onClick={()=>setNotice('')} aria-label="بستن"><X size={15}/></button></div>}
   </main>;
@@ -299,7 +306,7 @@ function Toolbar({ query, setQuery, placeholder, action, actionLabel }) {
 
 function DeviceTable({ devices, canEdit, onSelect, onEdit, onArchive, onProvision }) {
   if (!devices.length) return <Empty text="دستگاهی ثبت نشده است."/>;
-  return <div className="live-table-wrap"><table className="live-table"><thead><tr><th>سریال</th><th>مدل</th><th>مشتری</th><th>وضعیت</th><th>آخرین ارتباط</th><th>نسخه</th><th>خطای فعال</th>{canEdit&&<th>عملیات</th>}</tr></thead><tbody>{devices.map(device=><tr key={device.id}><td><button className="live-link" dir="ltr" onClick={()=>onSelect(device)}>{device.serial_number}</button></td><td>{device.model_name}</td><td>{device.customer_name}</td><td><Status value={device.is_online?'online':'offline'}/></td><td>{formatDate(device.last_seen_at)}</td><td dir="ltr">{device.software_version||'—'}</td><td>{device.active_fault_count||0}</td>{canEdit&&<td className="live-row-actions"><button onClick={()=>onEdit(device)}>ویرایش</button><button onClick={()=>onProvision?.(device)}>شناسه</button><button onClick={()=>onArchive?.(device)}>بایگانی</button></td>}</tr>)}</tbody></table></div>;
+  return <div className="live-table-wrap"><table className="live-table"><thead><tr><th>سریال</th><th>مدل</th><th>مشتری</th><th>وضعیت</th><th>آخرین ارتباط</th><th>نسخه</th><th>خطای فعال</th>{canEdit&&<th>عملیات</th>}</tr></thead><tbody>{devices.map(device=><tr key={device.id}><td><button className="live-link" dir="ltr" onClick={()=>onSelect(device)}>{device.serial_number}</button></td><td>{device.model_display_name || device.model_name}{device.model_display_name && <small dir="ltr">{device.model_name}</small>}</td><td>{device.customer_name}</td><td><Status value={device.is_online?'online':'offline'}/></td><td>{formatDate(device.last_seen_at)}</td><td dir="ltr">{device.software_version||'—'}</td><td>{device.active_fault_count||0}</td>{canEdit&&<td className="live-row-actions"><button onClick={()=>onEdit(device)}>ویرایش</button><button onClick={()=>onProvision?.(device)}>شناسه</button><button onClick={()=>onArchive?.(device)}>بایگانی</button></td>}</tr>)}</tbody></table></div>;
 }
 
 function CustomerTable({ customers, canEdit, onEdit, onArchive }) {

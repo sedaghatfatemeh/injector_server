@@ -165,7 +165,7 @@ def test_serial_uniqueness_includes_archived_devices_and_other_customers():
     customer = Customer.objects.create(organization_name="Other workshop", contact_name="Ali", contact_phone="456")
     client = APIClient()
     client.force_authenticate(staff_user(superuser=True))
-    payload = {"serial_number": device.serial_number, "customer": customer.pk, "model_name": "M2"}
+    payload = {"serial_number": device.serial_number, "customer": customer.pk, "device_model": registration_model()}
     response = client.post("/api/v1/devices/", payload, format="json")
     assert response.status_code == 400 and "serial_number" in response.data
     assert Device.objects.filter(serial_number=device.serial_number).count() == 1
@@ -331,7 +331,7 @@ def test_super_admin_can_manage_customer_and_device_and_records_audit():
     assert customer.contact_email == "service@example.test"
     assert customer.contact_phone == "123"
     device_response = client.post("/api/v1/devices/", {
-        "serial_number": "PS-001", "model_name": "M1", "customer": customer.pk,
+        "serial_number": "PS-001", "device_model": registration_model(), "customer": customer.pk,
     }, format="json")
     assert device_response.status_code == 201
     assert AuditEntry.objects.filter(action="customer.created").exists()
@@ -385,3 +385,8 @@ def test_update_result_enforces_safe_lifecycle_and_production_rollout_gate():
     assignment.refresh_from_db()
     assert assignment.state == UpdateAssignment.State.SUCCEEDED
     assert assignment.reported_at is not None
+
+
+def registration_model():
+    from devices.models import DeviceModel
+    return DeviceModel.objects.get_or_create(code="AD-UNIT-B", defaults={"display_name": "Unit", "kind": "unit", "edition": "b"})[0].pk

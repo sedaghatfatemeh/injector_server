@@ -8,8 +8,10 @@ from django.db import connection
 from devices.views import StaffUserViewSet
 from devices.portal import CustomerDeviceViewSet, CustomerSummary, CustomerUserViewSet
 from .frontend import console
+from devices.catalog import DeviceModelViewSet
 
 router = DefaultRouter()
+router.register("device-models", DeviceModelViewSet, basename="device-model")
 router.register("customers", CustomerViewSet, basename="customer")
 router.register("devices", DeviceViewSet, basename="device")
 router.register("events", EventViewSet, basename="event")

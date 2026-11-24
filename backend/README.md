@@ -6,11 +6,32 @@ The backend is a Django REST Framework service backed by PostgreSQL. Staff and c
 
 ### Container build context and Darkoob
 
+The application now includes a staff device-model catalog. Before running the new
+API/frontend, apply `python manage.py migrate` once: migrations 0007/0008 add the
+catalog and seed the 15 approved type/edition combinations without rewriting
+unmatched legacy models or release compatibility keys. In **مدل‌های دستگاه**, a
+super administrator creates models and edits display names/active status; device
+registration selects a catalog model. Multiple devices may share one customer.
+See the [catalog contract](../docs/inventory-api.md).
+
 Build the API from the **repository root**, using `backend/Dockerfile`:
 
 ```sh
 docker build --target production -f backend/Dockerfile -t injector-api .
 ```
+
+If Docker Hub returns HTTP 403 for the Node base image, the source can be overridden
+without changing the Dockerfile. Docker publishes its official Node image in
+[ECR Public](https://gallery.ecr.aws/docker/library/node) as well:
+
+```sh
+docker compose build --build-arg NODE_IMAGE=public.ecr.aws/docker/library/node:22-bookworm-slim api
+```
+
+Alternatively set `NODE_IMAGE=public.ecr.aws/docker/library/node:22-bookworm-slim`
+in the local root `.env` and use `docker compose build api`. The default remains
+`node:22-bookworm-slim`. This addresses access to that image registry; later npm
+or other registry/network failures still need their own diagnosis.
 
 For the deployment build, select the repository root (`.`) as the build context,
 `backend/Dockerfile` as the Dockerfile, and port `8000` for the API service.
