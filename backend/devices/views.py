@@ -29,6 +29,7 @@ from .access import browser_identity
 from .serializers import CheckInSerializer, CustomerSerializer, DeviceSerializer, EventIngestSerializer, EventSerializer, ReleaseSerializer, UpdateAssignmentSerializer, UpdateResultSerializer
 from .serializers import RollbackSerializer, StaffUserSerializer
 from .releases import record_update_result
+from .inventory import archive_inventory
 
 
 class StaffUserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -38,9 +39,12 @@ class StaffUserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.
     search_fields = ["email", "first_name", "last_name"]
 
     def get_queryset(self):
-        return get_user_model().objects.filter(
+        queryset = get_user_model().objects.filter(
             Q(is_superuser=True) | Q(is_staff=True, groups__name="support")
         ).distinct().order_by("-date_joined", "-pk")
+        if "is_active" in self.request.query_params:
+            queryset = queryset.filter(is_active=boolean_parameter(self.request, "is_active"))
+        return queryset
 
     def permission_denied(self, request, message=None, code=None):
         actor = request.user if isinstance(request.user, get_user_model()) else None
@@ -78,7 +82,7 @@ class CustomerViewSet(AuditedStaffActionsMixin, viewsets.ModelViewSet):
     ordering_fields = ["organization_name", "created_at"]
 
     def get_queryset(self):
-        queryset = Customer.objects.filter(is_archived=boolean_parameter(self.request, "is_archived"))
+        queryset = archive_inventory(Customer.objects.all(), self.request)
         return queryset.annotate(device_count=Count("devices", filter=Q(devices__is_archived=False))).order_by("organization_name", "pk")
 
     def perform_create(self, serializer):
@@ -128,7 +132,7 @@ class DeviceViewSet(AuditedStaffActionsMixin, viewsets.ModelViewSet):
     ordering_fields = ["serial_number", "model_name", "last_seen_at", "created_at"]
 
     def get_queryset(self):
-        return device_inventory().filter(is_archived=boolean_parameter(self.request, "is_archived"))
+        return archive_inventory(device_inventory(), self.request)
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
@@ -284,6 +288,8 @@ class ReleaseViewSet(AuditedStaffActionsMixin, viewsets.ModelViewSet):
     serializer_class = ReleaseSerializer
     permission_classes = [IsAuthenticated, IsStaffUser]
     http_method_names = ["get", "post", "head", "options"]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["status"]
 
     def get_queryset(self):
         return SoftwareRelease.objects.all().order_by("-created_at", "-pk")

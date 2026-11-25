@@ -99,9 +99,12 @@ class CustomerUserViewSet(NoStoreMixin, AuditedStaffActionsMixin, mixins.ListMod
     search_fields = ["email", "first_name", "last_name", "customer_membership__customer__organization_name"]
 
     def get_queryset(self):
-        return get_user_model().objects.filter(customer_membership__isnull=False).select_related(
+        queryset = get_user_model().objects.filter(customer_membership__isnull=False).select_related(
             "customer_membership__customer",
         ).order_by("-date_joined", "-pk")
+        if "is_active" in self.request.query_params:
+            queryset = queryset.filter(is_active=boolean_parameter(self.request, "is_active"))
+        return queryset
 
     def perform_create(self, serializer):
         with transaction.atomic():

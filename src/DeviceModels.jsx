@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Cpu, FlaskConical, Layers, Monitor, Plus } from 'lucide-react';
 import Dialog from './Dialog.jsx';
 import { api } from './api.js';
+import ListStatusFilter from './ListStatusFilter.jsx';
 
 const kinds = [['unit', 'یونیت', Cpu], ['cr', 'کامان‌ریل', Layers], ['combo', 'ترکیبی یونیت و کامان‌ریل', Layers], ['pump', 'تست پمپ', FlaskConical], ['pro', 'تست کامل', Cpu]];
 const editions = [['b', 'باکس کنار دستگاه', Box], ['pc', 'کامپیوتری', Monitor], ['e', 'اقتصادی', Cpu]];
@@ -13,7 +14,7 @@ export function DeviceModelSelect({ models, editing }) {
   </select>{editing && !editing.device_model && <small>مدل قدیمی حفظ می‌شود؛ فقط با انتخاب مدل جدید تغییر می‌کند.</small>}</label>;
 }
 
-export default function DeviceModels({ models, canEdit, onSaved, onSessionExpired }) {
+export default function DeviceModels({ models, canEdit, onSaved, onSessionExpired, status, onStatus, loading, loadError }) {
   const [editing, setEditing] = useState(null);
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState('unit');
@@ -37,7 +38,8 @@ export default function DeviceModels({ models, canEdit, onSaved, onSessionExpire
     } finally { setBusy(false); }
   }
   return <section className="live-card"><div className="live-section-heading"><div><h2>کاتالوگ مدل‌های دستگاه</h2><p>نوع، نسخه و کد ثابت هر مدل؛ هر مشتری می‌تواند چند دستگاه داشته باشد.</p></div>{canEdit && <button className="live-primary" onClick={() => edit()}><Plus size={16}/>تعریف مدل</button>}</div>
-    {!models.length ? <p className="live-empty">مدلی برای نمایش وجود ندارد؛ ابتدا مدل را تعریف کنید.</p> : <div className="live-table-wrap"><table className="live-table"><thead><tr><th>کد مدل</th><th>نام نمایشی</th><th>نوع دستگاه</th><th>نسخه</th><th>وضعیت</th>{canEdit && <th>عملیات</th>}</tr></thead><tbody>{models.map(model => <tr key={model.id}><td dir="ltr">{model.code}</td><td>{model.display_name}</td><td>{model.kind_label}</td><td>{model.edition_label}</td><td>{model.is_active ? 'فعال' : 'غیرفعال'}</td>{canEdit && <td><button onClick={() => edit(model)}>ویرایش مدل {model.code}</button></td>}</tr>)}</tbody></table></div>}
+    <ListStatusFilter kind="account" label="وضعیت مدل" value={status} onChange={onStatus}/>
+    {loading ? <p role="status">در حال دریافت مدل‌ها…</p> : !loadError && (!models.length ? <p className="live-empty">مدلی با این وضعیت برای نمایش وجود ندارد.</p> : <div className="live-table-wrap"><table className="live-table"><thead><tr><th>کد مدل</th><th>نام نمایشی</th><th>نوع دستگاه</th><th>نسخه</th><th>وضعیت</th>{canEdit && <th>عملیات</th>}</tr></thead><tbody>{models.map(model => <tr key={model.id}><td dir="ltr">{model.code}</td><td>{model.display_name}</td><td>{model.kind_label}</td><td>{model.edition_label}</td><td>{model.is_active ? 'فعال' : 'غیرفعال'}</td>{canEdit && <td><button onClick={() => edit(model)}>ویرایش مدل {model.code}</button></td>}</tr>)}</tbody></table></div>)}
     {open && <Dialog title={editing ? 'ویرایش مدل دستگاه' : 'تعریف مدل دستگاه'} onClose={() => setOpen(false)}><form onSubmit={save}>
       <fieldset className="model-choices" disabled={Boolean(editing)}><legend>نوع دستگاه</legend>{kinds.map(([value, title, Icon]) => <label key={value}><input type="radio" name="kind" value={value} checked={kind === value} onChange={() => setKind(value)}/><Icon/><span>{title}</span></label>)}</fieldset>
       <fieldset className="model-choices model-editions" disabled={Boolean(editing)}><legend>نسخه دستگاه</legend>{editions.map(([value, title, Icon]) => <label key={value}><input type="radio" name="edition" value={value} checked={edition === value} onChange={() => setEdition(value)}/><Icon/><span>{title}</span></label>)}</fieldset>

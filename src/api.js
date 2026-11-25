@@ -34,9 +34,9 @@ async function request(path, options = {}) {
 
 export const api = {
   request,
-  deviceModels: async () => {
+  deviceModels: async (params = {}) => {
     const all = [];
-    let url = '/api/v1/device-models/';
+    let url = `/api/v1/device-models/?${new URLSearchParams(params)}`;
     while (url) {
       const data = await request(url);
       all.push(...(Array.isArray(data) ? data : data.results || []));
@@ -63,7 +63,7 @@ export const api = {
   customerDevices: (params = {}, options = {}) => request(`/api/v1/customer/devices/?${new URLSearchParams(params)}`, options),
   customerDevice: (id, options = {}) => request(`/api/v1/customer/devices/${encodeURIComponent(id)}/`, options),
   customerSummary: (options = {}) => request('/api/v1/customer/summary/', options),
-  releases: () => request('/api/v1/releases/'),
+  releases: (params = {}) => request(`/api/v1/releases/?${new URLSearchParams(params)}`),
   createCustomer: (data) => request('/api/v1/customers/', { method: 'POST', body: JSON.stringify(data) }),
   updateCustomer: (id, data) => request(`/api/v1/customers/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
   archiveCustomer: (id) => request(`/api/v1/customers/${id}/`, { method: 'DELETE' }),

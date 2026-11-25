@@ -3,10 +3,12 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { api } from './api.js';
 import Dialog from './Dialog.jsx';
 import { customerAccountText as t } from './locale.js';
+import ListStatusFilter from './ListStatusFilter.jsx';
 
 export default function CustomerUsers({ onSessionExpired }) {
   const [payload, setPayload] = useState(null);
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('');
   const [query, setQuery] = useState('');
   const [refresh, setRefresh] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export default function CustomerUsers({ onSessionExpired }) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(''); setPayload(null);
-    api.customerUsers({ page, search: query }, { signal: controller.signal }).then(value => {
+    api.customerUsers({ page, search: query, ...(status ? { is_active: status } : {}) }, { signal: controller.signal }).then(value => {
       if (!controller.signal.aborted) setPayload(value);
     }).catch(cause => {
       if (controller.signal.aborted) return;
@@ -34,7 +36,7 @@ export default function CustomerUsers({ onSessionExpired }) {
       else setError(t.error);
     }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [page, query, refresh, onSessionExpired]);
+  }, [page, query, status, refresh, onSessionExpired]);
 
   useEffect(() => {
     if (!open) return;
@@ -74,7 +76,7 @@ export default function CustomerUsers({ onSessionExpired }) {
     setSaving(true); setError(''); setNotice('');
     try {
       await api.setCustomerUserActive(user.id, !user.is_active);
-      if (alive.current) { setNotice(t.changed); setRefresh(value => value + 1); }
+      if (alive.current) { setNotice(t.changed); setPage(1); setRefresh(value => value + 1); }
     } catch (cause) {
       if (!alive.current) return;
       if (cause.status === 401 || cause.status === 403) onSessionExpired();
@@ -83,6 +85,7 @@ export default function CustomerUsers({ onSessionExpired }) {
   }
 
   return <section className="live-card" aria-labelledby="customer-users-title">
+    <ListStatusFilter kind="account" value={status} onChange={value => { setStatus(value); setPage(1); }}/>
     <div className="live-section-heading"><div><h2 id="customer-users-title">{t.title}</h2><p>{t.description}</p></div><div className="live-actions">
       <button className="live-icon" onClick={() => setRefresh(v => v + 1)} aria-label={t.refresh} disabled={loading}><RefreshCw size={17}/></button>
       <button className="live-primary" onClick={() => { setOrganization(''); setOrgSearch(''); setOrgPage(1); setNotice(''); setOpen(true); }}><Plus size={16}/>{t.add}</button>

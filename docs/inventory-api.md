@@ -30,6 +30,30 @@ All lists return `count`, `next`, `previous` and `results`, with 50 rows per pag
 
 ## Archive and retained history
 
+The staff device and customer inventory endpoints accept
+`archive_status=active|archived|all`. The default remains active-only. Selection
+is applied before search, ordering and pagination, so `count`, `next` and
+`previous` describe the selected inventory. Filters survive page changes; the
+interface resets to page 1 when search or archive selection changes. The legacy
+`is_archived=true|false` URLs remain supported, but combining that parameter with
+`archive_status`, or supplying an invalid selection, returns HTTP 400.
+
+Archived rows are labeled and presented read-only in the staff interface. Staff
+can open archived device history using the existing explicit opt-in URL flags.
+This increment adds no restore action or lifecycle change. Archived organization
+records do not become valid targets in registration/account-provisioning forms.
+
+Accounts and catalog models are not called archived: their lists offer
+`is_active=true|false` (omitting it includes both states). Staff account and
+customer-account counts/pagination are server-filtered. Release lists use
+`status=draft|published|withdrawn` (omitting it includes all), with server-filtered
+pagination. Event history exposes its existing include-archived-device and
+include-archived-organization flags; events themselves are immutable, not archived.
+
+These are staff-only capabilities. The customer portal still rejects unsupported
+archive parameters and always excludes archived or foreign devices; staff archive
+filters never expand customer visibility.
+
 DELETE archives records rather than physically deleting them. Customer profile archiving is independent of device archiving: it hides the customer from the default customer list, but does not archive associated devices, revoke their credentials or interrupt their work. Existing devices remain visible in inventory with `customer_is_archived:true`; their authenticated communications continue. New assignment to that archived profile is rejected.
 
 Device archiving excludes it from the default device list and rejects subsequent device authentication while archived. Events, update assignments, serial uniqueness and ownership references remain stored. Restoring a device does not rotate its credential; revoke/rotate explicitly when credential lifecycle changes are required.

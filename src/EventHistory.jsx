@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from './api.js';
 import EventTable from './EventTable.jsx';
 
-const emptyFilters = { search: '', serial: '', customer: '', state: '', after: '', before: '' };
+const emptyFilters = { search: '', serial: '', customer: '', state: '', after: '', before: '', archivedDevices: false, archivedCustomers: false };
 
 export default function EventHistory({ refreshKey = 0, onSessionExpired }) {
   const [draft, setDraft] = useState(emptyFilters);
@@ -25,6 +25,8 @@ export default function EventHistory({ refreshKey = 0, onSessionExpired }) {
     if (filters.state) params.state = filters.state;
     if (filters.after) params.occurred_after = new Date(filters.after).toISOString();
     if (filters.before) params.occurred_before = new Date(filters.before).toISOString();
+    if (filters.archivedDevices) params.device__is_archived = 'true';
+    if (filters.archivedCustomers) params.device__customer__is_archived = 'true';
     api.events(params, { signal: controller.signal }).then(payload => {
       if (!controller.signal.aborted) setResult(payload);
     }).catch(cause => {
@@ -67,6 +69,8 @@ export default function EventHistory({ refreshKey = 0, onSessionExpired }) {
       <label className="live-field"><span>وضعیت گزارش‌شده</span><select {...field('state')}><option value="">همه</option><option value="active">فعال</option><option value="resolved">رفع‌شده</option><option value="info">اطلاعات</option></select></label>
       <label className="live-field"><span>زمان وقوع از</span><input type="datetime-local" step="1" dir="ltr" {...field('after')}/></label>
       <label className="live-field"><span>زمان وقوع تا</span><input type="datetime-local" step="1" dir="ltr" {...field('before')}/></label>
+      <label><input type="checkbox" checked={draft.archivedDevices} onChange={event=>setDraft(value=>({...value,archivedDevices:event.target.checked}))}/> شامل دستگاه‌های بایگانی‌شده</label>
+      <label><input type="checkbox" checked={draft.archivedCustomers} onChange={event=>setDraft(value=>({...value,archivedCustomers:event.target.checked}))}/> شامل سازمان‌های بایگانی‌شده</label>
       <div className="live-event-filter-actions"><button className="live-primary" type="submit">اعمال فیلترها</button><button className="live-secondary" type="button" onClick={reset}>پاک کردن فیلترها</button></div>
     </form>
     <p className="live-hint">بازه بر اساس زمان وقوع است؛ زمان‌ها با منطقهٔ زمانی مرورگر ({Intl.DateTimeFormat().resolvedOptions().timeZone}) وارد می‌شوند.</p>

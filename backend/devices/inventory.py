@@ -49,6 +49,18 @@ def device_inventory():
     ).order_by("serial_number", "pk")
 
 
+def archive_inventory(queryset, request):
+    """Explicit three-state inventory selection; preserve legacy boolean URLs."""
+    selection = request.query_params.get("archive_status")
+    if selection is None:
+        return queryset.filter(is_archived=boolean_parameter(request, "is_archived"))
+    if selection not in {"active", "archived", "all"}:
+        raise ValidationError({"archive_status": "Use active, archived or all."})
+    if "is_archived" in request.query_params:
+        raise ValidationError({"archive_status": "Do not combine with is_archived."})
+    return queryset if selection == "all" else queryset.filter(is_archived=selection == "archived")
+
+
 CUSTOMER_AUDIT_FIELDS = ("organization_name", "contact_name", "contact_email", "contact_phone", "address", "notes", "is_archived")
 DEVICE_AUDIT_FIELDS = ("serial_number", "model_name", "device_model_id", "customer_id", "software_version", "location", "site_contact_name", "site_contact_phone", "is_archived")
 

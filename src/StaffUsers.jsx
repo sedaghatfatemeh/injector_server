@@ -3,6 +3,7 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { api } from './api.js';
 import Dialog from './Dialog.jsx';
 import { formatDate } from './EventTable.jsx';
+import ListStatusFilter from './ListStatusFilter.jsx';
 
 const text = {
   title: 'کاربران سامانه',
@@ -44,6 +45,7 @@ function message(error, fallback) {
 export default function StaffUsers({ onSessionExpired, refreshKey }) {
   const [payload, setPayload] = useState(null);
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('');
   const [refresh, setRefresh] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,13 +58,13 @@ export default function StaffUsers({ onSessionExpired, refreshKey }) {
     const controller = new AbortController();
     setLoading(true);
     setError('');
-    api.staffUsers({ page }, { signal: controller.signal }).then(setPayload).catch((cause) => {
+    api.staffUsers({ page, ...(status ? { is_active: status } : {}) }, { signal: controller.signal }).then(value => { if (!controller.signal.aborted) setPayload(value); }).catch((cause) => {
       if (controller.signal.aborted) return;
       if (cause.status === 401 || cause.status === 403) onSessionExpired();
       else setError(text.loadError);
     }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [page, refresh, refreshKey, onSessionExpired]);
+  }, [page, status, refresh, refreshKey, onSessionExpired]);
 
   const close = useCallback(() => { if (!saving) { setOpen(false); setFormError(''); } }, [saving]);
 
@@ -90,6 +92,7 @@ export default function StaffUsers({ onSessionExpired, refreshKey }) {
       <button className="live-icon" onClick={() => setRefresh((value) => value + 1)} aria-label={text.refresh} disabled={loading}><RefreshCw size={17}/></button>
       <button className="live-primary" onClick={() => { setNotice(''); setOpen(true); }}><Plus size={16}/>{text.add}</button>
     </div></div>
+    <ListStatusFilter kind="account" value={status} onChange={value => { setStatus(value); setPage(1); }}/>
     {notice && <p role="status">{notice}</p>}
     {error && <p className="live-error" role="alert">{error}</p>}
     {loading && <p role="status">{text.loading}</p>}
