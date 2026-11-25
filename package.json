@@ -7,9 +7,11 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:dates": "node --test tests/unit/dates.test.js"
   },
   "dependencies": {
+    "@internationalized/date": "^3.12.4",
     "@vitejs/plugin-react": "latest",
     "lucide-react": "^0.468.0",
     "react": "latest",

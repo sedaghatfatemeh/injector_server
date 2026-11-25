@@ -36,3 +36,43 @@ Nine real Edge checks passed: administrator account creation, invalid/valid cust
 Cleanup removes only the randomly named QA container with its matching database label, then drops that generated database. The development DB role must have create/drop database permission. If cleanup fails, the script reports the QA database name and exits unsuccessfully; investigate that named QA resource rather than deleting the ordinary database volume. Ports 8006 and 5186 must be free. Production TLS/cookie/proxy and static SPA fallback still need provider-specific validation.
 
 Verification checkpoint (2026-11-18): the complete PostgreSQL suite passed **278 tests**, the combined mocked browser suite passed **15 tests**, and the isolated real-backend Edge walkthrough passed **9 checks**. `npm.cmd run build`, backend `ruff check --no-cache .`, Django `check`, `makemigrations --check --dry-run` and `git diff --check` passed. New API tests clear their in-memory DRF throttle cache between cases; the production PostgreSQL login limiter remains unchanged. QA databases and API/Vite processes created by the real-backend script were removed afterward.
+## Persian calendar and Tehran time (injector-cz3)
+
+All live date/time displays share `src/dates.js` through `EventTable.formatDate`.
+The calendar is explicitly Persian and the timezone is `Asia/Tehran`, independent
+of the browser's timezone. Missing or invalid timestamps show a dash. Historical
+prototype/sample-data copy remains separate from the live interface.
+
+Event occurrence range inputs accept Persian, Arabic or ASCII digits in
+`YYYY/MM/DD HH:mm:ss` form (seconds and the time are optional; a date alone means
+00:00:00 Tehran). The month grid supports month/year selection, arrow keys,
+Home/End, PageUp/PageDown, Enter, Escape, and direct text entry. Input dates and
+times are validated rather than silently constrained, including leap-year dates.
+Historical Tehran DST gaps and ambiguous repeated times are rejected explicitly.
+
+`@internationalized/date` supplies calendar arithmetic. Convert to the Gregorian
+calendar before strict timezone conversion; do not parse Persian text with native
+`new Date()`. API parameters stay ISO-8601 UTC. Empty bounds are omitted, equal
+bounds are allowed, reversed bounds are rejected, and occurrence/receipt times
+remain separate. Bounds remain inclusive as defined by the existing API; selecting
+an end date does not silently extend it to the end of the day. Applied filters
+and UTC bounds survive pagination. Archive flags remain booleans during validation.
+
+Verification:
+
+```powershell
+npm.cmd run test:dates
+npx.cmd playwright test tests/browser/persian-dates.spec.js
+```
+
+Unit tests cover known Nowruz/leap fixtures, invalid dates/times, Tehran DST and
+independence from process timezone. Browser tests run in Los Angeles time while
+asserting Tehran display and outgoing UTC bounds; they also cover archive flags,
+pagination, mobile overflow, leap-day keyboard selection, Escape and reset.
+
+The calendar popup uses measured viewport placement: it flips above the input or
+shifts inside the available area, follows scrolling, and bounds its own height
+with internal overflow. Calendar table rows explicitly override the dashboard's
+54px inventory rows while preserving 40px day targets. Browser checks cover the
+reported 1366×608 content viewport, 1366×768, 390×700 and 320×568, asserting all
+popup edges and its close button stay visible without horizontal page overflow.

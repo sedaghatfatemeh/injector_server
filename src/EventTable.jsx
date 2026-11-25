@@ -1,5 +1,5 @@
 import React from 'react';
-import { locale } from './locale.js';
+import { formatPersianDateTime } from './dates.js';
 
 export const labels = {
   overview: 'نمای کلی', devices: 'دستگاه‌ها', customers: 'مشتریان', events: 'رویدادها', releases: 'به‌روزرسانی‌ها',
@@ -9,7 +9,7 @@ export const labels = {
 };
 
 export function formatDate(value) {
-  return value ? new Date(value).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  return formatPersianDateTime(value);
 }
 
 export function Status({ value }) {
