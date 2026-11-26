@@ -1,8 +1,8 @@
+import { RecordHistoryHeaders, RecordHistoryCells } from './RecordHistory.jsx';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
 import { api } from './api.js';
 import Dialog from './Dialog.jsx';
-import { formatDate } from './EventTable.jsx';
 import ListStatusFilter from './ListStatusFilter.jsx';
 
 const text = {
@@ -97,8 +97,8 @@ export default function StaffUsers({ onSessionExpired, refreshKey }) {
     {error && <p className="live-error" role="alert">{error}</p>}
     {loading && <p role="status">{text.loading}</p>}
     {!loading && !error && <>
-      {payload?.results?.length ? <div className="live-table-wrap"><table className="live-table"><thead><tr><th>{text.firstName}</th><th>{text.email}</th><th>{text.role}</th><th>{text.status}</th><th>{text.created}</th></tr></thead><tbody>
-        {payload.results.map((user) => <tr key={user.id}><td>{[user.first_name, user.last_name].filter(Boolean).join(' ') || '—'}</td><td dir="ltr">{user.email}</td><td>{user.role === 'super_admin' ? text.superAdmin : text.support}</td><td>{user.is_active ? text.active : text.inactive}</td><td>{formatDate(user.date_joined)}</td></tr>)}
+      {payload?.results?.length ? <div className="live-table-wrap"><table className="live-table"><thead><tr><th>{text.firstName}</th><th>{text.email}</th><th>{text.role}</th><th>{text.status}</th><RecordHistoryHeaders/></tr></thead><tbody>
+        {payload.results.map((user) => <tr key={user.id}><td>{[user.first_name, user.last_name].filter(Boolean).join(' ') || '—'}</td><td dir="ltr">{user.email}</td><td>{user.role === 'super_admin' ? text.superAdmin : text.support}</td><td>{user.is_active ? text.active : text.inactive}</td><RecordHistoryCells record={user}/></tr>)}
       </tbody></table></div> : <p>{text.empty}</p>}
       <div className="live-staff-pagination"><button className="live-secondary" disabled={!payload?.previous} onClick={() => setPage((value) => value - 1)}>قبلی</button><span>صفحهٔ {page.toLocaleString('fa-IR')} · {Number(payload?.count || 0).toLocaleString('fa-IR')} کاربر</span><button className="live-secondary" disabled={!payload?.next} onClick={() => setPage((value) => value + 1)}>بعدی</button></div>
     </>}

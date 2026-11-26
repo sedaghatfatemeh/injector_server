@@ -3,7 +3,9 @@ import { CalendarDate, CalendarDateTime, GregorianCalendar, PersianCalendar, toC
 export const timeZone = 'Asia/Tehran';
 export const persianCalendar = new PersianCalendar();
 const gregorianCalendar = new GregorianCalendar();
-const display = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { timeZone, dateStyle: 'medium', timeStyle: 'short', hourCycle: 'h23' });
+const numericOptions = { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' };
+const display = new Intl.DateTimeFormat('fa-IR-u-ca-persian', numericOptions);
+const detailedDisplay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { ...numericOptions, second: '2-digit' });
 export const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
 
 export function asciiDigits(value) {
@@ -12,10 +14,13 @@ export function asciiDigits(value) {
 
 export function persianDigits(value) { return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]); }
 
-export function formatPersianDateTime(value) {
+export function formatPersianDateTime(value, { seconds = false } = {}) {
   if (!value) return '—';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : display.format(date);
+  if (Number.isNaN(date.getTime())) return '—';
+  const parts = Object.fromEntries((seconds ? detailedDisplay : display).formatToParts(date).map(({ type, value }) => [type, value]));
+  // Isolate the numeric sequence inside Persian sentences and RTL table cells.
+  return `\u2066${parts.year}/${parts.month}/${parts.day} ${parts.hour}:${parts.minute}${seconds ? `:${parts.second}` : ''}\u2069`;
 }
 
 export function parsePersianDateTime(value) {

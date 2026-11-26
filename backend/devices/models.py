@@ -217,6 +217,7 @@ class UpdateAssignment(models.Model):
 
 class AuditEntry(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    actor_label = models.CharField(max_length=320, blank=True, editable=False, db_default="")
     action = models.CharField(max_length=100, db_index=True)
     target_type = models.CharField(max_length=100)
     target_id = models.CharField(max_length=100)
@@ -226,3 +227,9 @@ class AuditEntry(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [models.Index(fields=["target_type", "target_id", "created_at", "id"], name="audit_target_timeline_idx")]
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.actor_label = (self.actor.get_full_name().strip() or f"کاربر #{self.actor_id}")[:320] if self.actor_id else ""
+        super().save(*args, **kwargs)

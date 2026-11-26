@@ -30,6 +30,36 @@ All lists return `count`, `next`, `previous` and `results`, with 50 rows per pag
 
 ## Archive and retained history
 
+### Staff lifecycle metadata (injector-2kb)
+
+Staff customer/device/catalog/release and administrator account responses include
+read-only `record_history`: `created`, `edited`, `archived` and `withdrawn`. Each
+known operation is `{ "at": "ISO-8601 UTC timestamp", "by": "actor display label" }`;
+unrecorded operations are null. Creation uses the authoritative native creation
+date, with the recorded creator where available. Editing means the latest audited
+administrative change (including archive/status changes), not a device check-in.
+Archive and withdrawal remain distinct operations. Restored records retain their
+last known archival history. For immutable device events, occurrence and receipt
+time remain the relevant clocks; no artificial edit/archive lifecycle is added.
+
+New audit entries snapshot the actor's full name (or a stable user identifier when
+no name is provided), so later renaming/deletion cannot erase that display label.
+Existing audit entries retain their original content and timestamps: an available
+actor reference can identify the account; missing actors/history are unknown.
+The UI renders Persian dates and Tehran time including seconds. It does not infer
+an archive timestamp from `updated_at` when the archival audit entry is missing.
+
+Only the minimal lifecycle summary is exposed, never audit details, passwords or
+credentials. Customer-portal response allowlists are unchanged and exclude staff
+lifecycle metadata. Summaries are fetched once per serialized page, rather than
+one query per row. Audit creation and the domain mutation remain in their existing
+atomic transactions. Client-supplied metadata cannot set these server-owned values.
+
+Migration `0009_audit_actor_snapshot` adds the actor snapshot and a target/timeline
+index. An empty database default supports writes from the preceding app version
+during rollout; old writers do not invent a historical name. Run migrations before
+serving this API version. No existing creation/event timestamps are rewritten.
+
 The staff device and customer inventory endpoints accept
 `archive_status=active|archived|all`. The default remains active-only. Selection
 is applied before search, ordering and pagination, so `count`, `next` and

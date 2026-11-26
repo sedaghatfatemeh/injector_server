@@ -17,16 +17,18 @@ from rest_framework import serializers
 
 from .models import Customer, Device, DeviceEvent, DeviceModel, SoftwareRelease, UpdateAssignment
 from .inventory import normalize_phone
+from .record_history import RecordHistorySerializerMixin
 
 
-class StaffUserSerializer(serializers.ModelSerializer):
+class StaffUserSerializer(RecordHistorySerializerMixin, serializers.ModelSerializer):
+    history_target_type = "user"
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(write_only=True, trim_whitespace=False, max_length=128)
     role = serializers.ChoiceField(choices=["support", "super_admin"], default="support")
 
     class Meta:
         model = get_user_model()
-        fields = ["id", "email", "first_name", "last_name", "password", "role", "is_active", "date_joined", "last_login"]
+        fields = ["record_history", "id", "email", "first_name", "last_name", "password", "role", "is_active", "date_joined", "last_login"]
         read_only_fields = ["id", "is_active", "date_joined", "last_login"]
 
     def to_representation(self, instance):
@@ -70,7 +72,8 @@ class StaffUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"email": "A user with this email already exists."}) from exc
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class CustomerSerializer(RecordHistorySerializerMixin, serializers.ModelSerializer):
+    history_target_type = "customer"
     device_count = serializers.SerializerMethodField()
 
     def get_device_count(self, obj):
@@ -79,7 +82,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ["id", "organization_name", "contact_name", "contact_email", "contact_phone", "address", "notes", "device_count", "is_archived", "created_at", "updated_at"]
+        fields = ["record_history", "id", "organization_name", "contact_name", "contact_email", "contact_phone", "address", "notes", "device_count", "is_archived", "created_at", "updated_at"]
         read_only_fields = ["id", "device_count", "created_at", "updated_at"]
 
     def validate(self, attrs):
@@ -103,7 +106,8 @@ class CustomerSerializer(serializers.ModelSerializer):
         return value.strip()
 
 
-class DeviceSerializer(serializers.ModelSerializer):
+class DeviceSerializer(RecordHistorySerializerMixin, serializers.ModelSerializer):
+    history_target_type = "device"
     model_name = serializers.CharField(required=False, max_length=120)
     device_model = serializers.PrimaryKeyRelatedField(queryset=DeviceModel.objects.all(), required=False)
     model_display_name = serializers.CharField(source="device_model.display_name", read_only=True, default="")
@@ -166,7 +170,7 @@ class DeviceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Device
-        fields = ["id", "serial_number", "model_name", "device_model", "model_display_name", "customer", "customer_name", "customer_is_archived", "software_version", "last_seen_at", "is_online", "install_state", "active_fault_count", "location", "site_contact_name", "site_contact_phone", "is_archived", "created_at", "updated_at"]
+        fields = ["record_history", "id", "serial_number", "model_name", "device_model", "model_display_name", "customer", "customer_name", "customer_is_archived", "software_version", "last_seen_at", "is_online", "install_state", "active_fault_count", "location", "site_contact_name", "site_contact_phone", "is_archived", "created_at", "updated_at"]
         read_only_fields = ["id", "last_seen_at", "is_online", "install_state", "active_fault_count", "created_at", "updated_at"]
 
 
@@ -180,12 +184,13 @@ class EventSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class ReleaseSerializer(serializers.ModelSerializer):
+class ReleaseSerializer(RecordHistorySerializerMixin, serializers.ModelSerializer):
+    history_target_type = "release"
     target_all_devices = serializers.BooleanField(default=True)
 
     class Meta:
         model = SoftwareRelease
-        fields = ["id", "version", "package_url", "sha256", "compatible_models", "minimum_version", "release_notes", "status", "target_all_devices", "target_devices", "created_by", "published_at", "created_at"]
+        fields = ["record_history", "id", "version", "package_url", "sha256", "compatible_models", "minimum_version", "release_notes", "status", "target_all_devices", "target_devices", "created_by", "published_at", "created_at"]
         read_only_fields = ["id", "status", "created_by", "published_at", "created_at"]
 
     def validate_package_url(self, value):

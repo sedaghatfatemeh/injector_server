@@ -18,6 +18,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .record_history import RecordHistorySerializerMixin
 from .access import customer_membership
 from .inventory import boolean_parameter
 from .models import AuditEntry, Customer, CustomerMembership, Device
@@ -31,7 +32,8 @@ class NoStoreMixin:
         return response
 
 
-class CustomerUserSerializer(serializers.ModelSerializer):
+class CustomerUserSerializer(RecordHistorySerializerMixin, serializers.ModelSerializer):
+    history_target_type = "user"
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(write_only=True, trim_whitespace=False, max_length=128)
     customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.filter(is_archived=False), write_only=True)
@@ -39,7 +41,7 @@ class CustomerUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ["id", "email", "first_name", "last_name", "password", "customer", "organization", "is_active", "date_joined"]
+        fields = ["record_history", "id", "email", "first_name", "last_name", "password", "customer", "organization", "is_active", "date_joined"]
         read_only_fields = ["id", "organization", "date_joined"]
 
     def get_organization(self, user):

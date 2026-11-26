@@ -1,3 +1,5 @@
+import RowAction from './RowAction.jsx';
+import { RecordHistoryHeaders, RecordHistoryCells } from './RecordHistory.jsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
 import { api } from './api.js';
@@ -93,8 +95,8 @@ export default function CustomerUsers({ onSessionExpired }) {
     <label className="live-field"><span>{t.accountSearch}</span><input value={query} onChange={e => { setQuery(e.target.value); setPage(1); }}/></label>
     {notice && <p role="status">{notice}</p>}{error && <p className="live-error" role="alert">{error}</p>}
     {loading && <p role="status">{t.loading}</p>}
-    {!loading && !error && <>{payload?.results?.length ? <div className="live-table-wrap"><table className="live-table"><thead><tr><th>{t.email}</th><th>{t.customer}</th><th>{t.status}</th><th>{t.status}</th></tr></thead><tbody>
-      {payload.results.map(user => <tr key={user.id}><td dir="ltr">{user.email}</td><td>{user.organization.name}</td><td>{user.is_active ? t.active : t.inactive}{user.organization.is_archived && <small>{t.archived}</small>}</td><td><button className="live-secondary" disabled={saving || (!user.is_active && user.organization.is_archived)} onClick={() => toggle(user)} aria-label={`${user.is_active ? t.deactivate : t.activate} ${user.email}`}>{user.is_active ? t.deactivate : t.activate}</button></td></tr>)}
+    {!loading && !error && <>{payload?.results?.length ? <div className="live-table-wrap"><table className="live-table"><thead><tr><th>{t.email}</th><th>{t.customer}</th><th>{t.status}</th><RecordHistoryHeaders/><th>عملیات</th></tr></thead><tbody>
+      {payload.results.map(user => <tr key={user.id}><td dir="ltr">{user.email}</td><td>{user.organization.name}</td><td>{user.is_active ? t.active : t.inactive}{user.organization.is_archived && <small>{t.archived}</small>}</td><RecordHistoryCells record={user}/><td className="live-row-actions"><RowAction action="toggle" danger={user.is_active} disabled={saving || (!user.is_active && user.organization.is_archived)} onClick={() => toggle(user)} label={`${user.is_active ? t.deactivate : t.activate} ${user.email}`}/></td></tr>)}
     </tbody></table></div> : <p>{t.empty}</p>}
       <div className="live-staff-pagination"><button className="live-secondary" disabled={!payload?.previous} onClick={() => setPage(v => v - 1)}>{t.previous}</button><span>{Number(payload?.count || 0).toLocaleString('fa-IR')}</span><button className="live-secondary" disabled={!payload?.next} onClick={() => setPage(v => v + 1)}>{t.next}</button></div></>}
     {open && <Dialog title={t.add} onClose={close} dismissible={!saving}><form onSubmit={create}>

@@ -70,8 +70,7 @@
 .live-table tbody tr:last-child td { border-bottom: 0; }
 .live-table td small { display: block; margin-top: 4px; color: var(--live-muted); font-size: 10px; }
 .live-link, .live-row-actions button, .live-table td button { padding: 0; border: 0; background: transparent; color: var(--live-accent); cursor: pointer; font: inherit; }
-.live-row-actions { display: flex; gap: 10px; }
-.live-row-actions button:last-child { color: var(--live-danger); }
+.live-row-actions { white-space: nowrap; }
 .live-status { display: inline-flex; align-items: center; border-radius: 20px; padding: 4px 9px; background: var(--live-panel-alt); color: var(--live-muted); font-size: 10px; }
 .live-status.good { background: color-mix(in srgb, var(--live-good) 13%, transparent); color: var(--live-good); }
 .live-status.danger { background: color-mix(in srgb, var(--live-danger) 13%, transparent); color: var(--live-danger); }

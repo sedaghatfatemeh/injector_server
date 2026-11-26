@@ -48,6 +48,8 @@ The dark theme should preserve the same semantic roles and readable contrast. Co
 
 Use Vazirmatn as the primary typeface with system fallbacks. Display serial numbers, software versions, times, and fault codes left-to-right; keep labels and page structure right-to-left. Suggested sizes are 22–24 px for page headings, 13–15 px for panel headings, 10–13 px for interface text, and 9–10 px for metadata. In production, body text on mobile must meet WCAG readability expectations.
 
+Live date/time displays use Persian digits and the numeric Jalali pattern `YYYY/MM/DD HH:mm` (including `:ss` for record history), always in Asia/Tehran. Isolate numeric sequences from surrounding RTL text to preserve year/month/day order. API timestamps remain UTC. In managed lists, place the operations column last in logical order, at the left edge of the RTL table. Use shared icon buttons for row actions, with accessible names, descriptive hover titles, keyboard focus, and 40×40 px touch targets. Preserve permission checks and disabled states.
+
 ## Foundation Components
 
 Prefer native elements and shared components wherever possible: `Button` (primary/secondary/quiet), `IconButton`, `Badge`, `Card`, `Input`, `Select`, `Tabs`, `Table`, `Avatar`, `Breadcrumb`, `Dialog`, `Toast`, `EmptyState`, and `Pagination`. Use 6–10 px corner radii, very subtle shadows, and a single icon family. A custom component is justified only when composing foundation components does not meet a genuine device-specific need.

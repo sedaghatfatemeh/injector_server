@@ -32,10 +32,11 @@ test('open, empty, equal and reversed ranges are handled explicitly', () => {
 
 test('display uses Persian calendar and Tehran even across the UTC date boundary', () => {
   const formatted = asciiDigits(formatPersianDateTime('2025-03-20T20:30:00Z'));
-  assert.match(formatted, /1 فروردین 1404/);
-  assert.match(formatted, /0:00/);
+  assert.equal(formatted, '\u20661404/01/01 00:00\u2069');
+  assert.match(formatted, /00:00/);
   assert.equal(formatPersianDateTime(null), '—');
   assert.equal(formatPersianDateTime('invalid'), '—');
+  assert.equal(asciiDigits(formatPersianDateTime('2025-03-20T20:30:03Z', { seconds: true })), '\u20661404/01/01 00:00:03\u2069');
 });
 
 test('conversion and display are independent of the process timezone', () => {

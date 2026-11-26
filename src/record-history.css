@@ -1,0 +1,8 @@
+.record-history-cell { min-width: 145px; vertical-align: top; }
+.record-history-cell time, .record-history-detail time { display: block; font-variant-numeric: tabular-nums; }
+.record-history-cell small, .record-history-detail small { display: block; margin-top: 4px; color: var(--live-muted); white-space: normal; max-width: 190px; overflow-wrap: anywhere; font-size: 11px; }
+.record-history-unknown { color: var(--live-muted); }
+.record-history-detail { margin-block: 18px; padding-block: 12px; border-block: 1px solid var(--live-border); }
+.record-history-detail h3 { font-size: 13px; margin-top: 0; }
+.record-history-detail dl { display: grid; grid-template-columns: minmax(100px, 150px) 1fr; gap: 12px; font-size: 12px; }
+.record-history-detail dt { color: var(--live-muted); }.record-history-detail dd { margin: 0; }

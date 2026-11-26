@@ -292,7 +292,7 @@ class ReleaseViewSet(AuditedStaffActionsMixin, viewsets.ModelViewSet):
     filterset_fields = ["status"]
 
     def get_queryset(self):
-        return SoftwareRelease.objects.all().order_by("-created_at", "-pk")
+        return SoftwareRelease.objects.select_related("created_by").order_by("-created_at", "-pk")
 
     def get_permissions(self):
         if self.action in {"create", "withdraw", "rollback"}:

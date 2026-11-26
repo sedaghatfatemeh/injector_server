@@ -1,3 +1,4 @@
+from .record_history import RecordHistorySerializerMixin
 import re
 
 from django.db import IntegrityError, transaction
@@ -11,13 +12,14 @@ from .models import AuditEntry, DeviceModel
 from .permissions import AuditedStaffActionsMixin, IsStaffUser, IsSuperAdministrator
 
 
-class DeviceModelSerializer(serializers.ModelSerializer):
+class DeviceModelSerializer(RecordHistorySerializerMixin, serializers.ModelSerializer):
+    history_target_type = "device_model"
     kind_label = serializers.CharField(source="get_kind_display", read_only=True)
     edition_label = serializers.CharField(source="get_edition_display", read_only=True)
 
     class Meta:
         model = DeviceModel
-        fields = ["id", "code", "display_name", "kind", "kind_label", "edition", "edition_label", "is_active", "created_at"]
+        fields = ["record_history", "id", "code", "display_name", "kind", "kind_label", "edition", "edition_label", "is_active", "created_at"]
         read_only_fields = ["id", "created_at"]
 
     def validate_code(self, value):

@@ -22,8 +22,8 @@ test('Persian bounds convert to UTC Tehran instants and survive pagination with 
   test.setTimeout(60000);
   await calendarApi(page);
   const region = page.getByRole('region', { name: 'تاریخچه رویدادها' });
-  await expect(region.getByRole('cell', { name: /۱ فروردین ۱۴۰۴.*۰:۰۰/ })).toBeVisible();
-  await expect(region.getByRole('cell', { name: /۱ فروردین ۱۴۰۴.*۱:۰۵/ })).toBeVisible();
+  await expect(region.getByRole('cell', { name: /۱۴۰۴\/۰۱\/۰۱.*۰۰:۰۰/ })).toBeVisible();
+  await expect(region.getByRole('cell', { name: /۱۴۰۴\/۰۱\/۰۱.*۰۱:۰۵/ })).toBeVisible();
   await page.getByLabel('زمان وقوع از', { exact: true }).fill('۱۴۰۴/۰۱/۰۱ ۰۰:۰۰:۰۰');
   await page.getByLabel('زمان وقوع تا', { exact: true }).fill('1404/01/02 12:00:00');
   await page.getByRole('checkbox', { name: 'شامل دستگاه‌های بایگانی‌شده' }).check();
